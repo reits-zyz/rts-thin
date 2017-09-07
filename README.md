@@ -23,7 +23,7 @@ To play with rts thin node:
 5, Start rts thin node;
     cd
     mkdir .reits
-    ./reitsd projects/reits-test/src/bitcoind -rpcuser=user -rpcpassword=123456 -daemon -onlynet=ipv4 -listenonion=0 -rpcport=28333 -datadir=.reits -addnode=59.110.172.243:9555 -txindex -listen=0
+    ./reitsd -rpcuser=user -rpcpassword=123456 -daemon -onlynet=ipv4 -listenonion=0 -rpcport=28333 -datadir=.reits -addnode=59.110.172.243:9555 -txindex -listen=0
 
 6, Because rts is an opposite to a decentralized anonymous crypto currency system, you must have an secret key with an address authorized by the rts chain operator;
     Example:
