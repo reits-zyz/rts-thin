@@ -1,5 +1,5 @@
 diff --git a/contrib/seeds/generate-seeds.py b/contrib/seeds/generate-seeds.py
-index a3d035218..83802a73f 100755
+index a3d0352..83802a7 100755
 --- a/contrib/seeds/generate-seeds.py
 +++ b/contrib/seeds/generate-seeds.py
 @@ -129,8 +129,8 @@ def main():
@@ -14,7 +14,7 @@ index a3d035218..83802a73f 100755
              
  if __name__ == '__main__':
 diff --git a/depends/packages/libevent.mk b/depends/packages/libevent.mk
-index 2e9be1e98..9a0ab91d4 100644
+index 2e9be1e..9a0ab91 100644
 --- a/depends/packages/libevent.mk
 +++ b/depends/packages/libevent.mk
 @@ -3,10 +3,11 @@ $(package)_version=2.0.22
@@ -33,7 +33,7 @@ index 2e9be1e98..9a0ab91d4 100644
  define $(package)_set_vars
 diff --git a/depends/patches/libevent/zu_mingw_w64.patch b/depends/patches/libevent/zu_mingw_w64.patch
 new file mode 100644
-index 000000000..13d0a57df
+index 0000000..13d0a57
 --- /dev/null
 +++ b/depends/patches/libevent/zu_mingw_w64.patch
 @@ -0,0 +1,22 @@
@@ -60,14 +60,15 @@ index 000000000..13d0a57df
 + #define EV_SIZE_FMT "%zu"
 + #define EV_SSIZE_FMT "%zd"
 diff --git a/src/Makefile.am b/src/Makefile.am
-index 52316a9fd..59b0ce127 100644
+index 52316a9..5d9d90b 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -116,14 +116,11 @@ BITCOIN_CORE_H = \
+@@ -116,14 +116,12 @@ BITCOIN_CORE_H = \
    main.h \
    memusage.h \
    merkleblock.h \
 -  miner.h \
++  booker.h \
    net.h \
    netbase.h \
    noui.h \
@@ -78,11 +79,12 @@ index 52316a9fd..59b0ce127 100644
    prevector.h \
    primitives/block.h \
    primitives/transaction.h \
-@@ -196,15 +193,11 @@ libbitcoin_server_a_SOURCES = \
+@@ -196,15 +194,13 @@ libbitcoin_server_a_SOURCES = \
    dbwrapper.cpp \
    main.cpp \
    merkleblock.cpp \
 -  miner.cpp \
++  booker.cpp \
    net.cpp \
    noui.cpp \
 -  policy/fees.cpp \
@@ -91,10 +93,11 @@ index 52316a9fd..59b0ce127 100644
    rest.cpp \
    rpcblockchain.cpp \
 -  rpcmining.cpp \
++  rpcbooking.cpp \
    rpcmisc.cpp \
    rpcnet.cpp \
    rpcrawtransaction.cpp \
-@@ -267,7 +260,6 @@ crypto_libbitcoin_crypto_a_SOURCES = \
+@@ -267,7 +263,6 @@ crypto_libbitcoin_crypto_a_SOURCES = \
  libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
  libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
  libbitcoin_common_a_SOURCES = \
@@ -104,7 +107,7 @@ index 52316a9fd..59b0ce127 100644
    chainparams.cpp \
 diff --git a/src/amount.cpp b/src/amount.cpp
 deleted file mode 100644
-index a3abd8cd8..000000000
+index a3abd8c..0000000
 --- a/src/amount.cpp
 +++ /dev/null
 @@ -1,33 +0,0 @@
@@ -142,7 +145,7 @@ index a3abd8cd8..000000000
 -    return strprintf("%d.%08d %s/kB", nSatoshisPerK / COIN, nSatoshisPerK % COIN, CURRENCY_UNIT);
 -}
 diff --git a/src/amount.h b/src/amount.h
-index a48b17d51..aa7726fc3 100644
+index a48b17d..aa7726f 100644
 --- a/src/amount.h
 +++ b/src/amount.h
 @@ -10,14 +10,14 @@
@@ -383,7 +386,7 @@ index a48b17d51..aa7726fc3 100644
 +
  #endif //  BITCOIN_AMOUNT_H
 diff --git a/src/base58.cpp b/src/base58.cpp
-index 5e26cf8d4..621f2a031 100644
+index 5e26cf8..621f2a0 100644
 --- a/src/base58.cpp
 +++ b/src/base58.cpp
 @@ -248,6 +248,21 @@ bool CBitcoinAddress::IsValid(const CChainParams& params) const
@@ -409,7 +412,7 @@ index 5e26cf8d4..621f2a031 100644
  {
      if (!IsValid())
 diff --git a/src/base58.h b/src/base58.h
-index a3980118a..0780a507e 100644
+index a398011..0780a50 100644
 --- a/src/base58.h
 +++ b/src/base58.h
 @@ -57,13 +57,13 @@ std::string EncodeBase58Check(const std::vector<unsigned char>& vchIn);
@@ -437,7 +440,7 @@ index a3980118a..0780a507e 100644
      bool IsScript() const;
  };
 diff --git a/src/bitcoin-tx.cpp b/src/bitcoin-tx.cpp
-index 2c502ead3..2077b1c82 100644
+index 2c502ea..2077b1c 100644
 --- a/src/bitcoin-tx.cpp
 +++ b/src/bitcoin-tx.cpp
 @@ -207,7 +207,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
@@ -498,7 +501,7 @@ index 2c502ead3..2077b1c82 100644
  
              // if redeemScript given and private keys given,
 diff --git a/src/bitcoind.cpp b/src/bitcoind.cpp
-index 3b6608c95..d3b61d08a 100644
+index 3b6608c..2c9bb42 100644
 --- a/src/bitcoind.cpp
 +++ b/src/bitcoind.cpp
 @@ -13,6 +13,7 @@
@@ -509,20 +512,30 @@ index 3b6608c95..d3b61d08a 100644
  
  #include <boost/algorithm/string/predicate.hpp>
  #include <boost/filesystem.hpp>
-@@ -171,6 +172,7 @@ bool AppInit(int argc, char* argv[])
+@@ -20,6 +21,7 @@
+ 
+ #include <stdio.h>
+ 
++extern CCriticalSection cs_miner;
+ /* Introduction text for doxygen: */
+ 
+ /*! \mainpage Developer documentation
+@@ -171,6 +173,9 @@ bool AppInit(int argc, char* argv[])
      } else {
          WaitForShutdown(&threadGroup);
      }
++
++    LOCK(cs_miner);
 +
      Shutdown();
  
      return fRet;
 diff --git a/src/booker.cpp b/src/booker.cpp
 new file mode 100644
-index 000000000..6dcbc7446
+index 0000000..1dd9c82
 --- /dev/null
 +++ b/src/booker.cpp
-@@ -0,0 +1,400 @@
+@@ -0,0 +1,555 @@
 +// Copyright (c) 2009-2010 Satoshi Nakamoto
 +// Copyright (c) 2009-2015 The Bitcoin Core developers
 +// Distributed under the MIT software license, see the accompanying
@@ -923,50 +936,208 @@ index 000000000..6dcbc7446
 +    for (int i = 0; i < nThreads; i++)
 +        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams)));
 +}
-diff --git a/src/miner.h b/src/booker.h
-similarity index 76%
-rename from src/miner.h
-rename to src/booker.h
-index 512494198..ec78b47af 100644
---- a/src/miner.h
++
++static void GenerateOperatorBlock()
++{
++
++    if (!pKeyOperator) return;
++
++    CPubKey pkOperator = pKeyOperator->GetPubKey();
++    CKeyID idKeyOperator = pkOperator.GetID();
++
++    // Update block
++    CBlockIndex* tip = chainActive.Tip();
++
++    auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(Params(), true));
++
++    if (!pblocktemplate.get())
++        return;
++
++    CBlock* pblock = &pblocktemplate->block; // pointer for convenience
++
++    pblock->nRootHeight = tip->nRootHeight;
++    pblock->nOperatorHeight = tip->nHeight + 1;
++    pblock->nChainStakeSeconds = tip->nChainStakeSeconds;
++
++    // Create priviledged transaction
++    CMutableTransaction txNew;
++
++    txNew.nLockTime = chainActive.Height();
++
++    txNew.vin.resize(1);
++    txNew.vout.clear();
++
++    txNew.vin[0].prevout.SetNull();
++
++    int nOperatorHeight = tip->nOperatorHeight;
++    int nRootHeight = tip->nRootHeight;
++
++    while (nRootHeight > nOperatorHeight) {
++        if (chainActive[nRootHeight]->WithData(BLOCK_OPERATOR)) {
++            nOperatorHeight = nRootHeight;
++            break;
++        }
++        nRootHeight = chainActive[nRootHeight]->pprev->nRootHeight;
++    }
++
++    const uint160 *idNextOperator = chainActive[nOperatorHeight]->idNextOperatorPubKey;
++
++    if (*idNextOperator != (uint160)idKeyOperator)
++        return;
++
++    CScript scriptAuth = CScript() << OP_RETURN << vector<unsigned char>(idKeyOperator.begin(), idKeyOperator.end());
++
++    txNew.vout.push_back(CTxOut(make_pair(0, 0), scriptAuth));
++
++    const CTransaction tx(txNew);
++
++    const CScript operatorRedeemScript = GetScriptForDestination(idKeyOperator);
++
++    uint256 hash = SignatureHash(operatorRedeemScript, tx, 0, SIGHASH_ALL);
++
++    vector<unsigned char> vSignature;
++
++    if (!pKeyOperator->Sign(hash, vSignature)) return;
++
++    vSignature.push_back('\x01');
++    txNew.vin[0].scriptSig = CScript() << vSignature << ToByteVector(pkOperator);
++
++    pblock->vtx[0] = CTransaction(txNew);
++    pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
++
++
++    txNew.vout[0].scriptPubKey = CScript() << OP_RETURN << ToByteVector(pblock->GetHash());
++
++    CTransaction ctx(txNew);
++
++    hash = SignatureHash(operatorRedeemScript, ctx, 0, SIGHASH_ALL);
++
++    if (!pKeyOperator->Sign(hash, vSignature)) return;
++
++    vSignature.push_back('\x01');
++
++    pblock->vchBlockSig = CScript() << vSignature;
++
++    CValidationState state;
++    if (!TestBlockValidity(state, Params(), *pblock, tip)) {
++        LogPrintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state));
++        return;
++    }
++
++    if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL)) {
++        LogPrintf("Failed to add priviledged block to chain: %s", FormatStateMessage(state));
++    }
++
++}
++
++static void OperatorBlockLoop()
++{
++    RenameThread("operator-booker");
++
++    LogPrintf("Operator block generator loop starts ...\n");
++
++    volatile int i;
++
++    {
++        LOCK(cs_main);
++        GenerateOperatorBlock();
++        i = nTxAccepted;
++    }
++
++    while (true) {
++
++        try {
++            {
++                boost::unique_lock<boost::mutex> lock(csMemoryPool);
++                while (i == nTxAccepted) cvMemoryPool.wait(lock);
++            }
++
++            {
++                LOCK(cs_main);
++                GenerateOperatorBlock();
++                i = nTxAccepted;
++            }
++
++            boost::this_thread::interruption_point();
++        }
++        catch (const boost::thread_interrupted&)
++        {
++            LogPrintf("Operator block generator terminated\n");
++            throw;
++        }
++        catch (const std::runtime_error &e)
++        {
++            LogPrintf("Operator booker runtime error: %s\n", e.what());
++            return;
++        }
++
++    }
++}
++
++void GenerateOperatorBlocks(bool fGenerate)
++{
++    static boost::thread* bookerThread = NULL;
++
++    if (bookerThread != NULL)
++    {
++        bookerThread->interrupt();
++        bookerThread->join();
++        delete bookerThread;
++        bookerThread = NULL;
++    }
++
++    if (!fGenerate)
++        return;
++
++    bookerThread = new boost::thread(OperatorBlockLoop);
++}
+diff --git a/src/booker.h b/src/booker.h
+new file mode 100644
+index 0000000..79c8b7a
+--- /dev/null
 +++ b/src/booker.h
-@@ -3,8 +3,8 @@
- // Distributed under the MIT software license, see the accompanying
- // file COPYING or http://www.opensource.org/licenses/mit-license.php.
- 
--#ifndef BITCOIN_MINER_H
--#define BITCOIN_MINER_H
+@@ -0,0 +1,39 @@
++// Copyright (c) 2009-2010 Satoshi Nakamoto
++// Copyright (c) 2009-2015 The Bitcoin Core developers
++// Distributed under the MIT software license, see the accompanying
++// file COPYING or http://www.opensource.org/licenses/mit-license.php.
++
 +#ifndef BITCOIN_BOOKER_H
 +#define BITCOIN_BOOKER_H
- 
- #include "primitives/block.h"
- 
-@@ -20,21 +20,16 @@ namespace Consensus { struct Params; };
- static const bool DEFAULT_GENERATE = false;
- static const int DEFAULT_GENERATE_THREADS = 1;
- 
--static const bool DEFAULT_PRINTPRIORITY = false;
--
- struct CBlockTemplate
- {
-     CBlock block;
--    std::vector<CAmount> vTxFees;
-     std::vector<int64_t> vTxSigOps;
- };
- 
--/** Run the miner threads */
++
++#include "primitives/block.h"
++
++#include <stdint.h>
++
++class CBlockIndex;
++class CChainParams;
++class CReserveKey;
++class CScript;
++class CWallet;
++class CKey;
++namespace Consensus { struct Params; };
++
++static const bool DEFAULT_GENERATE = false;
++static const int DEFAULT_GENERATE_THREADS = 1;
++
++struct CBlockTemplate
++{
++    CBlock block;
++    std::vector<int64_t> vTxSigOps;
++};
++
++/** Manage the opertor booking thread */
++void GenerateOperatorBlocks(bool fGenerate);
++
 +/** Run the booker threads */
- void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams);
- /** Generate a new block, without valid proof-of-work */
--CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn);
++void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams);
++/** Generate a new block, without valid proof-of-work */
 +CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, bool bManual = false);
- /** Modify the extranonce in a block */
--void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
- int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
--
- #endif // BITCOIN_MINER_H
++/** Modify the extranonce in a block */
++int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
++#endif // BITCOIN_MINER_H
 diff --git a/src/chain.cpp b/src/chain.cpp
-index 3450ed6c3..320868707 100644
+index 3450ed6..3208687 100644
 --- a/src/chain.cpp
 +++ b/src/chain.cpp
 @@ -4,6 +4,7 @@
@@ -1108,7 +1279,7 @@ index 3450ed6c3..320868707 100644
  
  CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
 diff --git a/src/chain.h b/src/chain.h
-index ae6c4338d..82e1732f5 100644
+index ae6c433..82e1732 100644
 --- a/src/chain.h
 +++ b/src/chain.h
 @@ -8,11 +8,22 @@
@@ -1561,7 +1732,7 @@ index ae6c4338d..82e1732f5 100644
  
  #endif // BITCOIN_CHAIN_H
 diff --git a/src/chainparams.cpp b/src/chainparams.cpp
-index 4af6f34c6..1923a0806 100644
+index 4af6f34..1923a08 100644
 --- a/src/chainparams.cpp
 +++ b/src/chainparams.cpp
 @@ -14,45 +14,46 @@
@@ -1896,7 +2067,7 @@ index 4af6f34c6..1923a0806 100644
          throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
  }
 diff --git a/src/clientversion.cpp b/src/clientversion.cpp
-index aae0569bb..acc772ad5 100644
+index aae0569..acc772a 100644
 --- a/src/clientversion.cpp
 +++ b/src/clientversion.cpp
 @@ -13,7 +13,7 @@
@@ -1909,7 +2080,7 @@ index aae0569bb..acc772ad5 100644
  /**
   * Client version number
 diff --git a/src/coincontrol.h b/src/coincontrol.h
-index 9626ad2c5..65f46fd8d 100644
+index 9626ad2..65f46fd 100644
 --- a/src/coincontrol.h
 +++ b/src/coincontrol.h
 @@ -16,8 +16,6 @@ public:
@@ -1930,7 +2101,7 @@ index 9626ad2c5..65f46fd8d 100644
  
      bool HasSelected() const
 diff --git a/src/coins.cpp b/src/coins.cpp
-index 4d1dbdea4..7c03665ca 100644
+index 4d1dbde..7c03665 100644
 --- a/src/coins.cpp
 +++ b/src/coins.cpp
 @@ -233,12 +233,16 @@ const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input) const
@@ -1986,7 +2157,7 @@ index 4d1dbdea4..7c03665ca 100644
  
  CCoinsModifier::CCoinsModifier(CCoinsViewCache& cache_, CCoinsMap::iterator it_, size_t usage) : cache(cache_), it(it_), cachedCoinUsage(usage) {
 diff --git a/src/coins.h b/src/coins.h
-index eab94ec1b..13d628ed1 100644
+index eab94ec..13d628e 100644
 --- a/src/coins.h
 +++ b/src/coins.h
 @@ -70,6 +70,7 @@
@@ -2030,7 +2201,7 @@ index eab94ec1b..13d628ed1 100644
      const CTxOut &GetOutputFor(const CTxIn& input) const;
  
 diff --git a/src/compressor.h b/src/compressor.h
-index 4a7209083..b5b6dcf8f 100644
+index 4a72090..b5b6dcf 100644
 --- a/src/compressor.h
 +++ b/src/compressor.h
 @@ -107,13 +107,18 @@ public:
@@ -2058,7 +2229,7 @@ index 4a7209083..b5b6dcf8f 100644
          CScriptCompressor cscript(REF(txout.scriptPubKey));
          READWRITE(cscript);
 diff --git a/src/consensus/consensus.h b/src/consensus/consensus.h
-index ad9cc2617..9f8ffc40b 100644
+index ad9cc26..9f8ffc4 100644
 --- a/src/consensus/consensus.h
 +++ b/src/consensus/consensus.h
 @@ -11,7 +11,7 @@ static const unsigned int MAX_BLOCK_SIZE = 1000000;
@@ -2071,7 +2242,7 @@ index ad9cc2617..9f8ffc40b 100644
  /** Flags for nSequence and nLockTime locks */
  enum {
 diff --git a/src/consensus/params.h b/src/consensus/params.h
-index 4f3480b89..3e1302c65 100644
+index 4f3480b..3e1302c 100644
 --- a/src/consensus/params.h
 +++ b/src/consensus/params.h
 @@ -35,6 +35,7 @@ struct BIP9Deployment {
@@ -2103,7 +2274,7 @@ index 4f3480b89..3e1302c65 100644
  
 diff --git a/src/genesis.h b/src/genesis.h
 new file mode 100644
-index 000000000..741422db6
+index 0000000..741422d
 --- /dev/null
 +++ b/src/genesis.h
 @@ -0,0 +1,11 @@
@@ -2119,18 +2290,19 @@ index 000000000..741422db6
 +#define GENESIS_HASH "ddbfc471879e87188093276707a69e8c5554e2219eab2c7d27b6d01960e9e96d"
 +#define GENESIS_BLOCK_SIG "51483045022100b7de803ed13e2b7bbb0b8b9785760a92aef110fcaffd7652650fde1753dc519e02204317a0fc1634074d6d14ae3c8c1c916da86675e99513f924dd67be6a2e9d63c601483045022100b8a1dc3756092010c49fdbcc1d85aba7dd2bd609945d3d70bd7fd7ef2fc5f66102202b91abd16e1019ab7b5fa16269405416fc04493a3da2ef8fa7020f3598ff9bf101483045022100ecabef6174aafbf3a00ee7616ca22ed0a002920ef0714e4ee1661b37942f2b950220088949e54875b85c4a31d2e17a91768ecee88f40df69814e975ca6d12d85bef901"
 diff --git a/src/init.cpp b/src/init.cpp
-index 0b3234566..cb840c1ef 100644
+index 0b32345..12a9e72 100644
 --- a/src/init.cpp
 +++ b/src/init.cpp
-@@ -20,7 +20,6 @@
+@@ -20,7 +20,7 @@
  #include "httprpc.h"
  #include "key.h"
  #include "main.h"
 -#include "miner.h"
++#include "booker.h"
  #include "net.h"
  #include "policy/policy.h"
  #include "rpcserver.h"
-@@ -67,7 +66,6 @@ using namespace std;
+@@ -67,7 +67,6 @@ using namespace std;
  #ifdef ENABLE_WALLET
  CWallet* pwalletMain = NULL;
  #endif
@@ -2138,7 +2310,7 @@ index 0b3234566..cb840c1ef 100644
  static const bool DEFAULT_PROXYRANDOMIZE = true;
  static const bool DEFAULT_REST_ENABLE = false;
  static const bool DEFAULT_DISABLE_SAFEMODE = false;
-@@ -94,7 +92,6 @@ enum BindFlags {
+@@ -94,7 +93,6 @@ enum BindFlags {
      BF_WHITELIST    = (1U << 2),
  };
  
@@ -2146,11 +2318,11 @@ index 0b3234566..cb840c1ef 100644
  CClientUIInterface uiInterface; // Declared but not defined in ui_interface.h
  
  //////////////////////////////////////////////////////////////////////////////
-@@ -195,22 +192,10 @@ void Shutdown()
-     if (pwalletMain)
+@@ -196,21 +194,11 @@ void Shutdown()
          pwalletMain->Flush(false);
  #endif
--    GenerateBitcoins(false, 0, Params());
+     GenerateBitcoins(false, 0, Params());
++    GenerateOperatorBlocks(false);
      StopNode();
      StopTorControl();
      UnregisterNodeSignals(GetNodeSignals());
@@ -2169,7 +2341,7 @@ index 0b3234566..cb840c1ef 100644
      {
          LOCK(cs_main);
          if (pcoinsTip != NULL) {
-@@ -397,19 +382,9 @@ std::string HelpMessage(HelpMessageMode mode)
+@@ -397,19 +385,9 @@ std::string HelpMessage(HelpMessageMode mode)
      strUsage += HelpMessageGroup(_("Wallet options:"));
      strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
      strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
@@ -2189,16 +2361,7 @@ index 0b3234566..cb840c1ef 100644
      strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
      strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), "wallet.dat"));
      strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
-@@ -456,8 +431,6 @@ std::string HelpMessage(HelpMessageMode mode)
-         _("If <category> is not supplied or if <category> = 1, output all debugging information.") + _("<category> can be:") + " " + debugCategories + ".");
-     if (showDebug)
-         strUsage += HelpMessageOpt("-nodebug", "Turn off debugging messages, same as -debug=0");
--    strUsage += HelpMessageOpt("-gen", strprintf(_("Generate coins (default: %u)"), DEFAULT_GENERATE));
--    strUsage += HelpMessageOpt("-genproclimit=<n>", strprintf(_("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"), DEFAULT_GENERATE_THREADS));
-     strUsage += HelpMessageOpt("-help-debug", _("Show all debugging options (usage: --help -help-debug)"));
-     strUsage += HelpMessageOpt("-logips", strprintf(_("Include IP addresses in debug output (default: %u)"), DEFAULT_LOGIPS));
-     strUsage += HelpMessageOpt("-logtimestamps", strprintf(_("Prepend debug output with timestamp (default: %u)"), DEFAULT_LOGTIMESTAMPS));
-@@ -465,16 +438,11 @@ std::string HelpMessage(HelpMessageMode mode)
+@@ -465,16 +443,11 @@ std::string HelpMessage(HelpMessageMode mode)
      {
          strUsage += HelpMessageOpt("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS));
          strUsage += HelpMessageOpt("-mocktime=<n>", "Replace actual time with <n> seconds since epoch (default: 0)");
@@ -2215,7 +2378,7 @@ index 0b3234566..cb840c1ef 100644
  #ifdef ENABLE_WALLET
          strUsage += HelpMessageOpt("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB));
  #endif
-@@ -494,7 +462,6 @@ std::string HelpMessage(HelpMessageMode mode)
+@@ -494,7 +467,6 @@ std::string HelpMessage(HelpMessageMode mode)
      strUsage += HelpMessageGroup(_("Block creation options:"));
      strUsage += HelpMessageOpt("-blockminsize=<n>", strprintf(_("Set minimum block size in bytes (default: %u)"), DEFAULT_BLOCK_MIN_SIZE));
      strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
@@ -2223,7 +2386,7 @@ index 0b3234566..cb840c1ef 100644
      if (showDebug)
          strUsage += HelpMessageOpt("-blockversion=<n>", "Override block version to test forking scenarios");
  
-@@ -943,75 +910,14 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+@@ -943,75 +915,14 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
      if (nConnectTimeout <= 0)
          nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
  
@@ -2299,18 +2462,19 @@ index 0b3234566..cb840c1ef 100644
  
      std::string strWalletFile = GetArg("-wallet", "wallet.dat");
  #endif // ENABLE_WALLET
-@@ -1066,8 +972,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+@@ -1066,9 +977,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
          return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.") + " %s.", strDataDir, e.what()));
      }
  
 +#if 0
  #ifndef WIN32
      CreatePidFile(GetPidFile(), getpid());
-+#endif
  #endif
++#endif
      if (GetBoolArg("-shrinkdebugfile", !fDebug))
          ShrinkDebugFile();
-@@ -1423,13 +1331,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+ 
+@@ -1423,13 +1336,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
      }
      LogPrintf(" block index %15dms\n", GetTimeMillis() - nStart);
  
@@ -2324,7 +2488,7 @@ index 0b3234566..cb840c1ef 100644
      // ********************************************************* Step 8: load wallet
  #ifdef ENABLE_WALLET
      if (fDisableWallet) {
-@@ -1613,12 +1514,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+@@ -1613,12 +1519,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
          BOOST_FOREACH(const std::string& strFile, mapMultiArgs["-loadblock"])
              vImportFiles.push_back(strFile);
      }
@@ -2340,16 +2504,7 @@ index 0b3234566..cb840c1ef 100644
  
      // ********************************************************* Step 11: start node
  
-@@ -1658,7 +1562,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
-     // --- end disabled ---
- 
-     // Generate coins in the background
--    GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams);
-+    // GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams);
- 
-     // ********************************************************* Step 12: finished
- 
-@@ -1675,5 +1579,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+@@ -1675,5 +1584,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
      }
  #endif
  
@@ -2360,7 +2515,7 @@ index 0b3234566..cb840c1ef 100644
      return !fRequestShutdown;
  }
 diff --git a/src/main.cpp b/src/main.cpp
-index f85ac3317..f55c9de2a 100644
+index f85ac33..50a5649 100644
 --- a/src/main.cpp
 +++ b/src/main.cpp
 @@ -19,7 +19,6 @@
@@ -2383,7 +2538,20 @@ index f85ac3317..f55c9de2a 100644
  
  #include <sstream>
  
-@@ -78,10 +82,7 @@ uint64_t nPruneTarget = 0;
+@@ -62,6 +66,12 @@ CBlockIndex *pindexBestHeader = NULL;
+ int64_t nTimeBestReceived = 0;
+ CWaitableCriticalSection csBestBlock;
+ CConditionVariable cvBlockChange;
++
++CKey *pKeyOperator = NULL;
++CWaitableCriticalSection csMemoryPool;
++CConditionVariable cvMemoryPool;
++volatile int nTxAccepted = 0;
++
+ int nScriptCheckThreads = 0;
+ bool fImporting = false;
+ bool fReindex = false;
+@@ -78,10 +88,7 @@ uint64_t nPruneTarget = 0;
  bool fAlerts = DEFAULT_ALERTS;
  bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
  
@@ -2395,7 +2563,7 @@ index f85ac3317..f55c9de2a 100644
  
  struct COrphanTx {
      CTransaction tx;
-@@ -106,24 +107,10 @@ const string strMessageMagic = "Bitcoin Signed Message:\n";
+@@ -106,24 +113,10 @@ const string strMessageMagic = "Bitcoin Signed Message:\n";
  // Internal stuff
  namespace {
  
@@ -2422,7 +2590,7 @@ index f85ac3317..f55c9de2a 100644
          }
      };
  
-@@ -134,7 +121,7 @@ namespace {
+@@ -134,7 +127,7 @@ namespace {
       * as good as our current tip or better. Entries may be failed, though, and pruning nodes may be
       * missing the data for the block.
       */
@@ -2431,7 +2599,7 @@ index f85ac3317..f55c9de2a 100644
      /** Number of nodes with fSyncStarted. */
      int nSyncStarted = 0;
      /** All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
-@@ -287,6 +274,7 @@ map<NodeId, CNodeState> mapNodeState;
+@@ -287,6 +280,7 @@ map<NodeId, CNodeState> mapNodeState;
  
  // Requires cs_main.
  CNodeState *State(NodeId pnode) {
@@ -2439,7 +2607,7 @@ index f85ac3317..f55c9de2a 100644
      map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
      if (it == mapNodeState.end())
          return NULL;
-@@ -398,8 +386,8 @@ void ProcessBlockAvailability(NodeId nodeid) {
+@@ -398,8 +392,8 @@ void ProcessBlockAvailability(NodeId nodeid) {
  
      if (!state->hashLastUnknownBlock.IsNull()) {
          BlockMap::iterator itOld = mapBlockIndex.find(state->hashLastUnknownBlock);
@@ -2450,7 +2618,7 @@ index f85ac3317..f55c9de2a 100644
                  state->pindexBestKnownBlock = itOld->second;
              state->hashLastUnknownBlock.SetNull();
          }
-@@ -414,9 +402,9 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
+@@ -414,9 +408,9 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
      ProcessBlockAvailability(nodeid);
  
      BlockMap::iterator it = mapBlockIndex.find(hash);
@@ -2462,7 +2630,7 @@ index f85ac3317..f55c9de2a 100644
              state->pindexBestKnownBlock = it->second;
      } else {
          // An unknown block was announced; just assume that the latest one is the best one.
-@@ -425,9 +413,9 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
+@@ -425,9 +419,9 @@ void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
  }
  
  // Requires cs_main
@@ -2474,7 +2642,7 @@ index f85ac3317..f55c9de2a 100644
  }
  
  // Requires cs_main
-@@ -472,7 +460,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
+@@ -472,7 +466,7 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
      // Make sure pindexBestKnownBlock is up to date, we'll need it.
      ProcessBlockAvailability(nodeid);
  
@@ -2483,7 +2651,7 @@ index f85ac3317..f55c9de2a 100644
          // This peer has nothing interesting.
          return;
      }
-@@ -946,14 +934,12 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+@@ -946,14 +940,12 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
          return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
  
      // Check for negative or overflow output values
@@ -2501,7 +2669,7 @@ index f85ac3317..f55c9de2a 100644
          if (!MoneyRange(nValueOut))
              return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
      }
-@@ -969,7 +955,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+@@ -969,7 +961,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
  
      if (tx.IsCoinBase())
      {
@@ -2510,7 +2678,7 @@ index f85ac3317..f55c9de2a 100644
              return state.DoS(100, false, REJECT_INVALID, "bad-cb-length");
      }
      else
-@@ -1002,8 +988,8 @@ std::string FormatStateMessage(const CValidationState &state)
+@@ -1002,8 +994,8 @@ std::string FormatStateMessage(const CValidationState &state)
          state.GetRejectCode());
  }
  
@@ -2521,7 +2689,7 @@ index f85ac3317..f55c9de2a 100644
                                std::vector<uint256>& vHashTxnToUncache)
  {
      AssertLockHeld(cs_main);
-@@ -1025,10 +1011,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1025,10 +1017,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
      // Don't relay version 2 transactions until CSV is active, and we can be
      // sure that such transactions will be mined (unless we're on
      // -testnet/-regtest).
@@ -2534,7 +2702,7 @@ index f85ac3317..f55c9de2a 100644
  
      // Only accept nLockTime-using transactions that can be mined in the next
      // block; we don't want our mempool filled up with transactions that can't
-@@ -1089,7 +1077,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1089,7 +1083,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
          CCoinsView dummy;
          CCoinsViewCache view(&dummy);
  
@@ -2543,7 +2711,7 @@ index f85ac3317..f55c9de2a 100644
          LockPoints lp;
          {
          LOCK(pool.cs);
-@@ -1145,15 +1133,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1145,15 +1139,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
          unsigned int nSigOps = GetLegacySigOpCount(tx);
          nSigOps += GetP2SHSigOpCount(tx, view);
  
@@ -2560,7 +2728,7 @@ index f85ac3317..f55c9de2a 100644
  
          // Keep track of transactions that spend a coinbase, which we re-scan
          // during reorgs to ensure COINBASE_MATURITY is still met.
-@@ -1166,7 +1146,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1166,7 +1152,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
              }
          }
  
@@ -2569,7 +2737,7 @@ index f85ac3317..f55c9de2a 100644
          unsigned int nSize = entry.GetTxSize();
  
          // Check that the transaction doesn't have an excessive number of
-@@ -1178,41 +1158,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1178,41 +1164,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
              return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                  strprintf("%d", nSigOps));
  
@@ -2611,7 +2779,7 @@ index f85ac3317..f55c9de2a 100644
  
          // Calculate in-mempool ancestors, up to a limit.
          CTxMemPool::setEntries setAncestors;
-@@ -1243,7 +1188,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1243,7 +1194,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
  
          // Check if it's economically rational to mine this transaction rather
          // than the ones it replaces.
@@ -2619,7 +2787,7 @@ index f85ac3317..f55c9de2a 100644
          size_t nConflictingSize = 0;
          uint64_t nConflictingCount = 0;
          CTxMemPool::setEntries allConflicting;
-@@ -1254,7 +1198,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1254,7 +1204,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
          LOCK(pool.cs);
          if (setConflicts.size())
          {
@@ -2627,7 +2795,7 @@ index f85ac3317..f55c9de2a 100644
              set<uint256> setConflictsParents;
              const int maxDescendantsToVisit = 100;
              CTxMemPool::setEntries setIterConflicting;
-@@ -1281,33 +1224,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1281,33 +1230,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                              REJECT_NONSTANDARD, "too many potential replacements");
                  }
  
@@ -2661,7 +2829,7 @@ index f85ac3317..f55c9de2a 100644
                  BOOST_FOREACH(const CTxIn &txin, mi->GetTx().vin)
                  {
                      setConflictsParents.insert(txin.prevout.hash);
-@@ -1325,7 +1241,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1325,7 +1247,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                      pool.CalculateDescendants(it, allConflicting);
                  }
                  BOOST_FOREACH(CTxMemPool::txiter it, allConflicting) {
@@ -2669,7 +2837,7 @@ index f85ac3317..f55c9de2a 100644
                      nConflictingSize += it->GetTxSize();
                  }
              } else {
-@@ -1355,33 +1270,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1355,33 +1276,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                  }
              }
  
@@ -2709,7 +2877,7 @@ index f85ac3317..f55c9de2a 100644
              return false;
  
          // Check again against just the consensus-critical mandatory script
-@@ -1393,7 +1291,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1393,7 +1297,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
          // There is a similar check in CreateNewBlock() to prevent creating
          // invalid blocks, however allowing such transactions into the mempool
          // can be exploited as a DoS attack.
@@ -2718,7 +2886,7 @@ index f85ac3317..f55c9de2a 100644
          {
              return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
                  __func__, hash.ToString(), FormatStateMessage(state));
-@@ -1402,10 +1300,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1402,10 +1306,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
          // Remove conflicting transactions from the mempool
          BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
          {
@@ -2730,7 +2898,7 @@ index f85ac3317..f55c9de2a 100644
                      (int)nSize - (int)nConflictingSize);
          }
          pool.RemoveStaged(allConflicting);
-@@ -1426,11 +1323,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
+@@ -1426,15 +1329,25 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
      return true;
  }
  
@@ -2745,7 +2913,21 @@ index f85ac3317..f55c9de2a 100644
      if (!res) {
          BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache)
              pcoinsTip->Uncache(hashTx);
-@@ -1548,8 +1445,8 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
+     }
++
++    if (res && pKeyOperator)
++    {
++        {
++            boost::unique_lock<boost::mutex> lock(csMemoryPool);
++            nTxAccepted++;
++        }
++        cvMemoryPool.notify_all();
++    }
++
+     return res;
+ }
+ 
+@@ -1548,8 +1461,8 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
      }
  
      // Check the header
@@ -2756,7 +2938,7 @@ index f85ac3317..f55c9de2a 100644
  
      return true;
  }
-@@ -1564,32 +1461,20 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
+@@ -1564,32 +1477,20 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
      return true;
  }
  
@@ -2795,7 +2977,7 @@ index f85ac3317..f55c9de2a 100644
      if (!state)
          lockIBDState = true;
      return state;
-@@ -1597,8 +1482,8 @@ bool IsInitialBlockDownload()
+@@ -1597,8 +1498,8 @@ bool IsInitialBlockDownload()
  
  bool fLargeWorkForkFound = false;
  bool fLargeWorkInvalidChainFound = false;
@@ -2806,7 +2988,7 @@ index f85ac3317..f55c9de2a 100644
  void CheckForkWarningConditions()
  {
      AssertLockHeld(cs_main);
-@@ -1663,7 +1548,7 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
+@@ -1663,7 +1564,7 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
      // We define it this way because it allows us to only store the highest fork tip (+ base) which meets
      // the 7-block condition and from this always have the most-likely-to-cause-warning fork
      if (pfork && (!pindexBestForkTip || (pindexBestForkTip && pindexNewForkTip->nHeight > pindexBestForkTip->nHeight)) &&
@@ -2815,7 +2997,7 @@ index f85ac3317..f55c9de2a 100644
              chainActive.Height() - pindexNewForkTip->nHeight < 72)
      {
          pindexBestForkTip = pindexNewForkTip;
-@@ -1672,6 +1557,7 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
+@@ -1672,6 +1573,7 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
  
      CheckForkWarningConditions();
  }
@@ -2823,7 +3005,7 @@ index f85ac3317..f55c9de2a 100644
  
  // Requires cs_main.
  void Misbehaving(NodeId pnode, int howmuch)
-@@ -1695,19 +1581,19 @@ void Misbehaving(NodeId pnode, int howmuch)
+@@ -1695,19 +1597,19 @@ void Misbehaving(NodeId pnode, int howmuch)
  
  void static InvalidChainFound(CBlockIndex* pindexNew)
  {
@@ -2849,7 +3031,7 @@ index f85ac3317..f55c9de2a 100644
  }
  
  void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state) {
-@@ -1793,8 +1679,8 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
+@@ -1793,8 +1695,8 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
          if (!inputs.HaveInputs(tx))
              return state.Invalid(false, 0, "", "Inputs unavailable");
  
@@ -2860,7 +3042,7 @@ index f85ac3317..f55c9de2a 100644
          for (unsigned int i = 0; i < tx.vin.size(); i++)
          {
              const COutPoint &prevout = tx.vin[i].prevout;
-@@ -1810,28 +1696,86 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
+@@ -1810,28 +1712,86 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
              }
  
              // Check for negative or overflow input values
@@ -2960,7 +3142,7 @@ index f85ac3317..f55c9de2a 100644
  {
      if (!tx.IsCoinBase())
      {
-@@ -1849,13 +1793,70 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
+@@ -1849,13 +1809,70 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
          // before the last block chain checkpoint. This is safe because block merkle hashes are
          // still computed and checked, and any change will be caught at the next checkpoint.
          if (fScriptChecks) {
@@ -3034,7 +3216,7 @@ index f85ac3317..f55c9de2a 100644
                  if (pvChecks) {
                      pvChecks->push_back(CScriptCheck());
                      check.swap(pvChecks->back());
-@@ -1867,7 +1868,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
+@@ -1867,7 +1884,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                          // arguments; if so, don't trigger DoS protection to
                          // avoid splitting the network between upgraded and
                          // non-upgraded nodes.
@@ -3043,7 +3225,7 @@ index f85ac3317..f55c9de2a 100644
                                  flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheStore);
                          if (check2())
                              return state.Invalid(false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
-@@ -1882,9 +1883,91 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
+@@ -1882,9 +1899,91 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                      return state.DoS(100,false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                  }
              }
@@ -3136,7 +3318,7 @@ index f85ac3317..f55c9de2a 100644
      return true;
  }
  
-@@ -2006,6 +2089,8 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
+@@ -2006,6 +2105,8 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
  
      bool fClean = true;
  
@@ -3145,7 +3327,7 @@ index f85ac3317..f55c9de2a 100644
      CBlockUndo blockUndo;
      CDiskBlockPos pos = pindex->GetUndoPos();
      if (pos.IsNull())
-@@ -2013,7 +2098,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
+@@ -2013,7 +2114,7 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
      if (!UndoReadFromDisk(blockUndo, pos, pindex->pprev->GetBlockHash()))
          return error("DisconnectBlock(): failure reading undo data");
  
@@ -3154,7 +3336,7 @@ index f85ac3317..f55c9de2a 100644
          return error("DisconnectBlock(): block and undo data inconsistent");
  
      // undo transactions in reverse order
-@@ -2041,8 +2126,8 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
+@@ -2041,8 +2142,8 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
          }
  
          // restore inputs
@@ -3165,7 +3347,7 @@ index f85ac3317..f55c9de2a 100644
              if (txundo.vprevout.size() != tx.vin.size())
                  return error("DisconnectBlock(): transaction and undo data inconsistent");
              for (unsigned int j = tx.vin.size(); j-- > 0;) {
-@@ -2102,6 +2187,7 @@ void ThreadScriptCheck() {
+@@ -2102,6 +2203,7 @@ void ThreadScriptCheck() {
  // we're being fed a bad chain (blocks being generated much
  // too slowly or too quickly).
  //
@@ -3173,7 +3355,7 @@ index f85ac3317..f55c9de2a 100644
  void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const CBlockIndex *const &bestHeader,
                      int64_t nPowTargetSpacing)
  {
-@@ -2158,6 +2244,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const
+@@ -2158,6 +2260,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const
          lastAlertTime = now;
      }
  }
@@ -3181,7 +3363,7 @@ index f85ac3317..f55c9de2a 100644
  
  // Protected by cs_main
  static VersionBitsCache versionbitscache;
-@@ -2220,92 +2307,69 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
+@@ -2220,92 +2323,69 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
      int64_t nTimeStart = GetTimeMicros();
  
      // Check it again in case a previous version let a bad block in
@@ -3310,7 +3492,7 @@ index f85ac3317..f55c9de2a 100644
  
      int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
      LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
-@@ -2315,14 +2379,242 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
+@@ -2315,14 +2395,242 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
      CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
  
      std::vector<int> prevheights;
@@ -3555,7 +3737,7 @@ index f85ac3317..f55c9de2a 100644
      {
          const CTransaction &tx = block.vtx[i];
  
-@@ -2362,47 +2654,51 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
+@@ -2362,47 +2670,51 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                       REJECT_INVALID, "bad-blk-sigops");
              }
  
@@ -3620,7 +3802,7 @@ index f85ac3317..f55c9de2a 100644
              CDiskBlockPos pos;
              if (!FindUndoPos(state, pindex->nFile, pos, ::GetSerializeSize(blockundo, SER_DISK, CLIENT_VERSION) + 40))
                  return error("ConnectBlock(): FindUndoPos failed");
-@@ -2569,9 +2865,8 @@ void static UpdateTip(CBlockIndex *pindexNew) {
+@@ -2569,9 +2881,8 @@ void static UpdateTip(CBlockIndex *pindexNew) {
      nTimeBestReceived = GetTime();
      mempool.AddTransactionsUpdated(1);
  
@@ -3632,7 +3814,7 @@ index f85ac3317..f55c9de2a 100644
        Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
  
      cvBlockChange.notify_all();
-@@ -2641,15 +2936,17 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
+@@ -2641,15 +2952,17 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
          return false;
      // Resurrect mempool transactions from the disconnected block.
      std::vector<uint256> vHashUpdate;
@@ -3651,7 +3833,7 @@ index f85ac3317..f55c9de2a 100644
      }
      // AcceptToMemoryPool/addUnchecked all assume that new mempool entries have
      // no in-mempool children, which is generally not true when adding
-@@ -2664,6 +2961,10 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
+@@ -2664,6 +2977,10 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
      BOOST_FOREACH(const CTransaction &tx, block.vtx) {
          SyncWithWallets(tx, NULL);
      }
@@ -3662,7 +3844,7 @@ index f85ac3317..f55c9de2a 100644
      return true;
  }
  
-@@ -2744,7 +3045,7 @@ static CBlockIndex* FindMostWorkChain() {
+@@ -2744,7 +3061,7 @@ static CBlockIndex* FindMostWorkChain() {
  
          // Find the best candidate header.
          {
@@ -3671,7 +3853,7 @@ index f85ac3317..f55c9de2a 100644
              if (it == setBlockIndexCandidates.rend())
                  return NULL;
              pindexNew = *it;
-@@ -2765,7 +3066,7 @@ static CBlockIndex* FindMostWorkChain() {
+@@ -2765,7 +3082,7 @@ static CBlockIndex* FindMostWorkChain() {
              bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
              if (fFailedChain || fMissingData) {
                  // Candidate chain is not usable (either invalid or missing data)
@@ -3680,7 +3862,7 @@ index f85ac3317..f55c9de2a 100644
                      pindexBestInvalid = pindexNew;
                  CBlockIndex *pindexFailed = pindexNew;
                  // Remove the entire chain from the set.
-@@ -2796,7 +3097,7 @@ static CBlockIndex* FindMostWorkChain() {
+@@ -2796,7 +3113,7 @@ static CBlockIndex* FindMostWorkChain() {
  static void PruneBlockIndexCandidates() {
      // Note that we can't delete the current block itself, as we may need to return to it later in case a
      // reorganization to a better block fails.
@@ -3689,7 +3871,7 @@ index f85ac3317..f55c9de2a 100644
      while (it != setBlockIndexCandidates.end() && setBlockIndexCandidates.value_comp()(*it, chainActive.Tip())) {
          setBlockIndexCandidates.erase(it++);
      }
-@@ -2811,7 +3112,7 @@ static void PruneBlockIndexCandidates() {
+@@ -2811,7 +3128,7 @@ static void PruneBlockIndexCandidates() {
  static bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const CBlock* pblock)
  {
      AssertLockHeld(cs_main);
@@ -3698,7 +3880,7 @@ index f85ac3317..f55c9de2a 100644
      const CBlockIndex *pindexOldTip = chainActive.Tip();
      const CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
  
-@@ -2843,12 +3144,21 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
+@@ -2843,12 +3160,21 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
          // Connect new blocks.
          BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
              if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL)) {
@@ -3721,7 +3903,7 @@ index f85ac3317..f55c9de2a 100644
                      fContinue = false;
                      break;
                  } else {
-@@ -2857,7 +3167,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
+@@ -2857,7 +3183,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
                  }
              } else {
                  PruneBlockIndexCandidates();
@@ -3730,7 +3912,7 @@ index f85ac3317..f55c9de2a 100644
                      // We're in a better position than we were. Return temporarily to release the lock.
                      fContinue = false;
                      break;
-@@ -2872,11 +3182,13 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
+@@ -2872,11 +3198,13 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
      }
      mempool.check(pcoinsTip);
  
@@ -3744,7 +3926,7 @@ index f85ac3317..f55c9de2a 100644
  
      return true;
  }
-@@ -3057,11 +3369,11 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
+@@ -3057,11 +3385,11 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
      {
          pindexNew->pprev = (*miPrev).second;
          pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
@@ -3758,7 +3940,7 @@ index f85ac3317..f55c9de2a 100644
          pindexBestHeader = pindexNew;
  
      setDirtyBlockIndex.insert(pindexNew);
-@@ -3203,22 +3515,18 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
+@@ -3203,22 +3531,18 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
      return true;
  }
  
@@ -3785,7 +3967,7 @@ index f85ac3317..f55c9de2a 100644
  {
      // These are checks that are independent of context.
  
-@@ -3227,7 +3535,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
+@@ -3227,7 +3551,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
  
      // Check that the header is valid (particularly PoW).  This is mostly
      // redundant with the call in AcceptBlockHeader.
@@ -3794,7 +3976,7 @@ index f85ac3317..f55c9de2a 100644
          return false;
  
      // Check the merkle root.
-@@ -3256,9 +3564,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
+@@ -3256,9 +3580,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                           REJECT_INVALID, "bad-blk-length");
  
      // First transaction must be coinbase, the rest must not be
@@ -3810,7 +3992,7 @@ index f85ac3317..f55c9de2a 100644
      for (unsigned int i = 1; i < block.vtx.size(); i++)
          if (block.vtx[i].IsCoinBase())
              return state.DoS(100, error("CheckBlock(): more than one coinbase"),
-@@ -3280,7 +3593,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
+@@ -3280,7 +3609,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
          return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
                           REJECT_INVALID, "bad-blk-sigops");
  
@@ -3819,7 +4001,7 @@ index f85ac3317..f55c9de2a 100644
          block.fChecked = true;
  
      return true;
-@@ -3304,9 +3617,9 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
+@@ -3304,9 +3633,9 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  {
      const Consensus::Params& consensusParams = Params().GetConsensus();
      // Check proof of work
@@ -3832,7 +4014,7 @@ index f85ac3317..f55c9de2a 100644
  
      // Check timestamp against prev
      if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
-@@ -3334,13 +3647,13 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
+@@ -3334,13 +3663,13 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
  bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindexPrev)
  {
      const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
@@ -3849,7 +4031,7 @@ index f85ac3317..f55c9de2a 100644
  
      int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
                                ? pindexPrev->GetMedianTimePast()
-@@ -3353,9 +3666,10 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
+@@ -3353,9 +3682,10 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
          }
      }
  
@@ -3861,7 +4043,7 @@ index f85ac3317..f55c9de2a 100644
      {
          CScript expect = CScript() << nHeight;
          if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
-@@ -3363,6 +3677,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
+@@ -3363,6 +3693,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
              return state.DoS(100, error("%s: block height mismatch in coinbase", __func__), REJECT_INVALID, "bad-cb-height");
          }
      }
@@ -3869,7 +4051,7 @@ index f85ac3317..f55c9de2a 100644
  
      return true;
  }
-@@ -3399,8 +3714,8 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
+@@ -3399,8 +3730,8 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
              return state.DoS(100, error("%s: prev block invalid", __func__), REJECT_INVALID, "bad-prevblk");
  
          assert(pindexPrev);
@@ -3880,7 +4062,7 @@ index f85ac3317..f55c9de2a 100644
  
          if (!ContextualCheckBlockHeader(block, state, pindexPrev))
              return false;
-@@ -3428,7 +3743,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
+@@ -3428,7 +3759,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
      // process an unrequested block if it's new and has enough work to
      // advance our tip, and isn't too many blocks ahead.
      bool fAlreadyHave = pindex->nStatus & BLOCK_HAVE_DATA;
@@ -3889,7 +4071,7 @@ index f85ac3317..f55c9de2a 100644
      // Blocks that are too out-of-order needlessly limit the effectiveness of
      // pruning, because pruning will not delete block files that contain any
      // blocks which are too close in height to the tip.  Apply this test
-@@ -3521,8 +3836,10 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
+@@ -3521,8 +3852,10 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
      return true;
  }
  
@@ -3901,7 +4083,7 @@ index f85ac3317..f55c9de2a 100644
      AssertLockHeld(cs_main);
      assert(pindexPrev && pindexPrev == chainActive.Tip());
      if (fCheckpointsEnabled && !CheckIndexAgainstCheckpoint(pindexPrev, state, chainparams, block.GetHash()))
-@@ -3536,12 +3853,27 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
+@@ -3536,12 +3869,27 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
      // NOTE: CheckBlockHeader is called by CheckBlock
      if (!ContextualCheckBlockHeader(block, state, pindexPrev))
          return false;
@@ -3932,7 +4114,7 @@ index f85ac3317..f55c9de2a 100644
      assert(state.IsValid());
  
      return true;
-@@ -3728,18 +4060,18 @@ bool static LoadBlockIndexDB()
+@@ -3728,18 +4076,18 @@ bool static LoadBlockIndexDB()
      boost::this_thread::interruption_point();
  
      // Calculate nChainWork
@@ -3958,7 +4140,7 @@ index f85ac3317..f55c9de2a 100644
          // We can link the chain of blocks for which we've received transactions at some point.
          // Pruned nodes may have deleted the block.
          if (pindex->nTx > 0) {
-@@ -3756,11 +4088,11 @@ bool static LoadBlockIndexDB()
+@@ -3756,11 +4104,11 @@ bool static LoadBlockIndexDB()
          }
          if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && (pindex->nChainTx || pindex->pprev == NULL))
              setBlockIndexCandidates.insert(pindex);
@@ -3972,7 +4154,7 @@ index f85ac3317..f55c9de2a 100644
              pindexBestHeader = pindex;
      }
  
-@@ -3907,8 +4239,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
+@@ -3907,8 +4255,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
              CBlock block;
              if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                  return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
@@ -3983,7 +4165,7 @@ index f85ac3317..f55c9de2a 100644
          }
      }
  
-@@ -4178,7 +4511,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
+@@ -4178,7 +4527,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
          assert((pindexFirstNeverProcessed != NULL) == (pindex->nChainTx == 0)); // nChainTx != 0 is used to signal that all parent blocks have been processed (but may have been pruned).
          assert((pindexFirstNotTransactionsValid != NULL) == (pindex->nChainTx == 0));
          assert(pindex->nHeight == nHeight); // nHeight must be consistent.
@@ -3992,7 +4174,7 @@ index f85ac3317..f55c9de2a 100644
          assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.
          assert(pindexFirstNotTreeValid == NULL); // All mapBlockIndex entries must at least be TREE valid
          if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE) assert(pindexFirstNotTreeValid == NULL); // TREE valid implies all parents are TREE valid
-@@ -4188,7 +4521,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
+@@ -4188,7 +4537,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
              // Checks for not-invalid blocks.
              assert((pindex->nStatus & BLOCK_FAILED_MASK) == 0); // The failed mask cannot be set for blocks without invalid parents.
          }
@@ -4001,7 +4183,7 @@ index f85ac3317..f55c9de2a 100644
              if (pindexFirstInvalid == NULL) {
                  // If this block sorts at least as good as the current tip and
                  // is valid and we have all data for its parents, it must be in
-@@ -4232,7 +4565,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
+@@ -4232,7 +4581,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
              //    tip.
              // So if this block is itself better than chainActive.Tip() and it wasn't in
              // setBlockIndexCandidates, then it must be in mapBlocksUnlinked.
@@ -4010,7 +4192,7 @@ index f85ac3317..f55c9de2a 100644
                  if (pindexFirstInvalid == NULL) {
                      assert(foundInUnlinked);
                  }
-@@ -4426,8 +4759,8 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
+@@ -4426,8 +4775,8 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                          // chain if they are valid, and no more than a month older (both in time, and in
                          // best equivalent proof of work) than the best header chain we know about.
                          send = mi->second->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != NULL) &&
@@ -4021,7 +4203,7 @@ index f85ac3317..f55c9de2a 100644
                          if (!send) {
                              LogPrintf("%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom->GetId());
                          }
-@@ -4577,7 +4910,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -4577,7 +4926,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
          int64_t nTime;
          CAddress addrMe;
          CAddress addrFrom;
@@ -4030,7 +4212,7 @@ index f85ac3317..f55c9de2a 100644
          vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
          if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
          {
-@@ -4605,7 +4938,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -4605,7 +4954,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
              pfrom->fRelayTxes = true;
  
          // Disconnect if we connected to ourself
@@ -4039,7 +4221,7 @@ index f85ac3317..f55c9de2a 100644
          {
              LogPrintf("connected to self at %s, disconnecting\n", pfrom->addr.ToString());
              pfrom->fDisconnect = true;
-@@ -4628,7 +4961,26 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -4628,7 +4977,26 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
          UpdatePreferredDownload(pfrom, State(pfrom->GetId()));
  
          // Change version
@@ -4067,7 +4249,7 @@ index f85ac3317..f55c9de2a 100644
          pfrom->ssSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
  
          if (!pfrom->fInbound)
-@@ -4697,6 +5049,26 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -4697,6 +5065,26 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
  
      else if (strCommand == NetMsgType::VERACK)
      {
@@ -4094,7 +4276,7 @@ index f85ac3317..f55c9de2a 100644
          pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
  
          // Mark this node as currently connected, so we update its timestamp later.
-@@ -4831,7 +5203,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -4831,7 +5219,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
                      // not a direct successor.
                      pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexBestHeader), inv.hash);
                      CNodeState *nodestate = State(pfrom->GetId());
@@ -4103,7 +4285,7 @@ index f85ac3317..f55c9de2a 100644
                          nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
                          vToFetch.push_back(inv);
                          // Mark block as in flight already, even though the actual "getdata" message only goes out
-@@ -4909,7 +5281,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -4909,7 +5297,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
              }
              // If pruning, don't inv blocks unless we have on disk and are likely to still have
              // for some reasonable time window (1 hour) that block relay might require.
@@ -4113,7 +4295,7 @@ index f85ac3317..f55c9de2a 100644
              if (fPruneMode && (!(pindex->nStatus & BLOCK_HAVE_DATA) || pindex->nHeight <= chainActive.Tip()->nHeight - nPrunedBlocksLikelyToHave))
              {
                  LogPrint("net", " getblocks stopping, pruned or too old block at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-@@ -5003,7 +5376,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -5003,7 +5392,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
          pfrom->setAskFor.erase(inv.hash);
          mapAlreadyAskedFor.erase(inv);
  
@@ -4122,7 +4304,7 @@ index f85ac3317..f55c9de2a 100644
          {
              mempool.check(pcoinsTip);
              RelayTransaction(tx);
-@@ -5037,7 +5410,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -5037,7 +5426,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
  
                      if (setMisbehaving.count(fromPeer))
                          continue;
@@ -4131,7 +4313,7 @@ index f85ac3317..f55c9de2a 100644
                      {
                          LogPrint("mempool", "   accepted orphan tx %s\n", orphanHash.ToString());
                          RelayTransaction(orphanTx);
-@@ -5166,11 +5539,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
+@@ -5166,11 +5555,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv,
              pfrom->PushMessage(NetMsgType::GETHEADERS, chainActive.GetLocator(pindexLast), uint256());
          }
  
@@ -4146,7 +4328,7 @@ index f85ac3317..f55c9de2a 100644
              vector<CBlockIndex *> vToFetch;
              CBlockIndex *pindexWalk = pindexLast;
              // Calculate all the blocks we'd need to switch to pindexLast, up to a limit.
-@@ -5731,7 +6105,8 @@ bool SendMessages(CNode* pto)
+@@ -5731,7 +6121,8 @@ bool SendMessages(CNode* pto)
          // transactions become unconfirmed and spams other nodes.
          if (!fReindex && !fImporting && !IsInitialBlockDownload())
          {
@@ -4156,7 +4338,7 @@ index f85ac3317..f55c9de2a 100644
          }
  
          //
-@@ -5765,7 +6140,7 @@ bool SendMessages(CNode* pto)
+@@ -5765,7 +6156,7 @@ bool SendMessages(CNode* pto)
                          fRevertToInv = true;
                          break;
                      }
@@ -4165,7 +4347,7 @@ index f85ac3317..f55c9de2a 100644
                      pBestIndex = pindex;
                      if (fFoundStartingHeader) {
                          // add this to the headers message
-@@ -5896,7 +6271,7 @@ bool SendMessages(CNode* pto)
+@@ -5896,7 +6287,7 @@ bool SendMessages(CNode* pto)
          if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0) {
              QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
              int nOtherPeersWithValidatedDownloads = nPeersWithValidatedDownloads - (state.nBlocksInFlightValidHeaders > 0);
@@ -4175,7 +4357,7 @@ index f85ac3317..f55c9de2a 100644
                  pto->fDisconnect = true;
              }
 diff --git a/src/main.h b/src/main.h
-index 1a696dcd9..af3c72914 100644
+index 1a696dc..2d04a12 100644
 --- a/src/main.h
 +++ b/src/main.h
 @@ -10,6 +10,7 @@
@@ -4186,7 +4368,17 @@ index 1a696dcd9..af3c72914 100644
  #include "amount.h"
  #include "chain.h"
  #include "coins.h"
-@@ -48,18 +49,16 @@ static const bool DEFAULT_ALERTS = false;
+@@ -29,6 +30,9 @@
+ 
+ #include <boost/unordered_map.hpp>
+ 
++#include "key.h"
++#include "wallet/crypter.h"
++
+ class CBlockIndex;
+ class CBlockTreeDB;
+ class CBloomFilter;
+@@ -48,18 +52,16 @@ static const bool DEFAULT_ALERTS = false;
  static const bool DEFAULT_WHITELISTRELAY = true;
  /** Default for DEFAULT_WHITELISTFORCERELAY. */
  static const bool DEFAULT_WHITELISTFORCERELAY = true;
@@ -4209,7 +4401,7 @@ index 1a696dcd9..af3c72914 100644
  /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
  static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 72;
  /** The maximum size of a blk?????.dat file (since 0.8) */
-@@ -103,11 +102,8 @@ static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
+@@ -103,11 +105,8 @@ static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
  /** Additional block download timeout per parallel downloading peer (i.e. 5 min) */
  static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
  
@@ -4222,7 +4414,20 @@ index 1a696dcd9..af3c72914 100644
  static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
  static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
  static const bool DEFAULT_TXINDEX = false;
-@@ -145,7 +141,6 @@ extern unsigned int nBytesPerSigOp;
+@@ -135,6 +134,12 @@ extern uint64_t nLastBlockSize;
+ extern const std::string strMessageMagic;
+ extern CWaitableCriticalSection csBestBlock;
+ extern CConditionVariable cvBlockChange;
++
++extern CKey* pKeyOperator;
++extern CWaitableCriticalSection csMemoryPool;
++extern CConditionVariable cvMemoryPool;
++extern volatile int nTxAccepted;
++
+ extern bool fImporting;
+ extern bool fReindex;
+ extern int nScriptCheckThreads;
+@@ -145,7 +150,6 @@ extern unsigned int nBytesPerSigOp;
  extern bool fCheckBlockIndex;
  extern bool fCheckpointsEnabled;
  extern size_t nCoinCacheUsage;
@@ -4230,7 +4435,7 @@ index 1a696dcd9..af3c72914 100644
  extern bool fAlerts;
  extern bool fEnableReplacement;
  
-@@ -223,7 +218,7 @@ bool SendMessages(CNode* pto);
+@@ -223,7 +227,7 @@ bool SendMessages(CNode* pto);
  /** Run an instance of the script checking thread */
  void ThreadScriptCheck();
  /** Try to detect Partition (network isolation) attacks against us */
@@ -4239,7 +4444,7 @@ index 1a696dcd9..af3c72914 100644
  /** Check whether we are doing an initial block download (synchronizing from disk or network) */
  bool IsInitialBlockDownload();
  /** Format a string that describes several potential problems detected by the core.
-@@ -238,7 +233,6 @@ std::string GetWarnings(const std::string& strFor);
+@@ -238,7 +242,6 @@ std::string GetWarnings(const std::string& strFor);
  bool GetTransaction(const uint256 &hash, CTransaction &tx, const Consensus::Params& params, uint256 &hashBlock, bool fAllowSlow = false);
  /** Find the best known block, and make it the tip of the block chain */
  bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, const CBlock* pblock = NULL);
@@ -4247,7 +4452,7 @@ index 1a696dcd9..af3c72914 100644
  
  /**
   * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
-@@ -274,8 +268,8 @@ void FlushStateToDisk();
+@@ -274,8 +277,8 @@ void FlushStateToDisk();
  void PruneAndFlush();
  
  /** (try to) add transaction to memory pool **/
@@ -4258,7 +4463,7 @@ index 1a696dcd9..af3c72914 100644
  
  /** Convert CValidationState to a human-readable message for logging */
  std::string FormatStateMessage(const CValidationState &state);
-@@ -332,14 +326,16 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
+@@ -332,14 +335,16 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
   */
  unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
  
@@ -4277,7 +4482,7 @@ index 1a696dcd9..af3c72914 100644
  
  /** Apply the effects of this transaction on the UTXO set represented by view */
  void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
-@@ -438,15 +434,15 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
+@@ -438,15 +443,15 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
  bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
  
  /** Context-independent validity checks */
@@ -4296,7 +4501,7 @@ index 1a696dcd9..af3c72914 100644
  
  
  class CBlockFileInfo
-@@ -546,11 +542,23 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
+@@ -546,8 +551,6 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
   * be sent over the P2P network.
   */
  static const unsigned int REJECT_INTERNAL = 0x100;
@@ -4305,26 +4510,9 @@ index 1a696dcd9..af3c72914 100644
  /** Transaction is already known (either in mempool or blockchain) */
  static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
  /** Transaction conflicts with a transaction already known */
- static const unsigned int REJECT_CONFLICT = 0x102;
- 
-+#if 0
-+struct CCertificate {
-+    enum cert_type {
-+        CERT_ROOT = 0,
-+        CERT_LINK,
-+        CERT_TRANS,
-+        CERT_ISSUE,
-+    } type;
-+    CPubKey pk;
-+    std::vector<unsigned char> data;
-+    CPubKey auth;
-+};
-+#endif
-+
- #endif // BITCOIN_MAIN_H
 diff --git a/src/miner.cpp b/src/miner.cpp
 deleted file mode 100644
-index d095d418f..000000000
+index d095d41..0000000
 --- a/src/miner.cpp
 +++ /dev/null
 @@ -1,521 +0,0 @@
@@ -4849,8 +5037,54 @@ index d095d418f..000000000
 -    for (int i = 0; i < nThreads; i++)
 -        minerThreads->create_thread(boost::bind(&BitcoinMiner, boost::cref(chainparams)));
 -}
+diff --git a/src/miner.h b/src/miner.h
+deleted file mode 100644
+index 5124941..0000000
+--- a/src/miner.h
++++ /dev/null
+@@ -1,40 +0,0 @@
+-// Copyright (c) 2009-2010 Satoshi Nakamoto
+-// Copyright (c) 2009-2015 The Bitcoin Core developers
+-// Distributed under the MIT software license, see the accompanying
+-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+-
+-#ifndef BITCOIN_MINER_H
+-#define BITCOIN_MINER_H
+-
+-#include "primitives/block.h"
+-
+-#include <stdint.h>
+-
+-class CBlockIndex;
+-class CChainParams;
+-class CReserveKey;
+-class CScript;
+-class CWallet;
+-namespace Consensus { struct Params; };
+-
+-static const bool DEFAULT_GENERATE = false;
+-static const int DEFAULT_GENERATE_THREADS = 1;
+-
+-static const bool DEFAULT_PRINTPRIORITY = false;
+-
+-struct CBlockTemplate
+-{
+-    CBlock block;
+-    std::vector<CAmount> vTxFees;
+-    std::vector<int64_t> vTxSigOps;
+-};
+-
+-/** Run the miner threads */
+-void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainparams);
+-/** Generate a new block, without valid proof-of-work */
+-CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn);
+-/** Modify the extranonce in a block */
+-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+-int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
+-
+-#endif // BITCOIN_MINER_H
 diff --git a/src/net.cpp b/src/net.cpp
-index 2f60cfa1c..2b8de97e3 100644
+index 2f60cfa..2b8de97 100644
 --- a/src/net.cpp
 +++ b/src/net.cpp
 @@ -80,7 +80,6 @@ map<CNetAddr, LocalServiceInfo> mapLocalHost;
@@ -4924,7 +5158,7 @@ index 2f60cfa1c..2b8de97e3 100644
      {
          LOCK(cs_nLastNodeId);
 diff --git a/src/net.h b/src/net.h
-index 07083341d..833049cfc 100644
+index 0708334..833049c 100644
 --- a/src/net.h
 +++ b/src/net.h
 @@ -153,7 +153,6 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
@@ -4945,7 +5179,7 @@ index 07083341d..833049cfc 100644
      // Denial-of-service detection/prevention
 diff --git a/src/obj-test/.gitignore b/src/obj-test/.gitignore
 deleted file mode 100644
-index d6b7ef32c..000000000
+index d6b7ef3..0000000
 --- a/src/obj-test/.gitignore
 +++ /dev/null
 @@ -1,2 +0,0 @@
@@ -4953,7 +5187,7 @@ index d6b7ef32c..000000000
 -!.gitignore
 diff --git a/src/obj/.gitignore b/src/obj/.gitignore
 deleted file mode 100644
-index d6b7ef32c..000000000
+index d6b7ef3..0000000
 --- a/src/obj/.gitignore
 +++ /dev/null
 @@ -1,2 +0,0 @@
@@ -4961,7 +5195,7 @@ index d6b7ef32c..000000000
 -!.gitignore
 diff --git a/src/policy/fees.cpp b/src/policy/fees.cpp
 deleted file mode 100644
-index 980ecf10d..000000000
+index 980ecf1..0000000
 --- a/src/policy/fees.cpp
 +++ /dev/null
 @@ -1,582 +0,0 @@
@@ -5549,7 +5783,7 @@ index 980ecf10d..000000000
 -}
 diff --git a/src/policy/fees.h b/src/policy/fees.h
 deleted file mode 100644
-index 7a293267d..000000000
+index 7a29326..0000000
 --- a/src/policy/fees.h
 +++ /dev/null
 @@ -1,289 +0,0 @@
@@ -5843,7 +6077,7 @@ index 7a293267d..000000000
 -};
 -#endif /*BITCOIN_POLICYESTIMATOR_H */
 diff --git a/src/policy/policy.cpp b/src/policy/policy.cpp
-index 018b3d25b..cb52f3eec 100644
+index 018b3d2..cb52f3e 100644
 --- a/src/policy/policy.cpp
 +++ b/src/policy/policy.cpp
 @@ -53,7 +53,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
@@ -5880,7 +6114,7 @@ index 018b3d25b..cb52f3eec 100644
      }
  
 diff --git a/src/policy/policy.h b/src/policy/policy.h
-index 4f9354e36..4daa5aec9 100644
+index 4f9354e..4daa5ae 100644
 --- a/src/policy/policy.h
 +++ b/src/policy/policy.h
 @@ -17,8 +17,6 @@ class CCoinsViewCache;
@@ -5894,7 +6128,7 @@ index 4f9354e36..4daa5aec9 100644
  /** Maximum number of signature check operations in an IsStandard() P2SH script */
 diff --git a/src/pow.cpp b/src/pow.cpp
 deleted file mode 100644
-index 7392defe6..000000000
+index 7392def..0000000
 --- a/src/pow.cpp
 +++ /dev/null
 @@ -1,136 +0,0 @@
@@ -6036,7 +6270,7 @@ index 7392defe6..000000000
 -}
 diff --git a/src/pow.h b/src/pow.h
 deleted file mode 100644
-index 439944092..000000000
+index 4399440..0000000
 --- a/src/pow.h
 +++ /dev/null
 @@ -1,28 +0,0 @@
@@ -6069,7 +6303,7 @@ index 439944092..000000000
 -
 -#endif // BITCOIN_POW_H
 diff --git a/src/primitives/block.cpp b/src/primitives/block.cpp
-index 59e949d71..bc230dc1e 100644
+index 59e949d..bc230dc 100644
 --- a/src/primitives/block.cpp
 +++ b/src/primitives/block.cpp
 @@ -18,12 +18,12 @@ uint256 CBlockHeader::GetHash() const
@@ -6107,7 +6341,7 @@ index 59e949d71..bc230dc1e 100644
 +}
 +
 diff --git a/src/primitives/block.h b/src/primitives/block.h
-index 42276b2bc..fa420e9b9 100644
+index 42276b2..fa420e9 100644
 --- a/src/primitives/block.h
 +++ b/src/primitives/block.h
 @@ -25,8 +25,12 @@ public:
@@ -6185,7 +6419,7 @@ index 42276b2bc..fa420e9b9 100644
      }
  
 diff --git a/src/primitives/transaction.cpp b/src/primitives/transaction.cpp
-index 947f2e6a7..b2a2cc87d 100644
+index 947f2e6..b2a2cc8 100644
 --- a/src/primitives/transaction.cpp
 +++ b/src/primitives/transaction.cpp
 @@ -11,7 +11,7 @@
@@ -6275,7 +6509,7 @@ index 947f2e6a7..b2a2cc87d 100644
          vin.size(),
          vout.size(),
 diff --git a/src/primitives/transaction.h b/src/primitives/transaction.h
-index 9f7d6f394..a1722ecc5 100644
+index 9f7d6f3..a1722ec 100644
 --- a/src/primitives/transaction.h
 +++ b/src/primitives/transaction.h
 @@ -126,7 +126,7 @@ public:
@@ -6414,7 +6648,7 @@ index 9f7d6f394..a1722ecc5 100644
  
  #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
 diff --git a/src/rpcblockchain.cpp b/src/rpcblockchain.cpp
-index f0bcafafe..ad4a7747c 100644
+index f0bcafa..ad4a774 100644
 --- a/src/rpcblockchain.cpp
 +++ b/src/rpcblockchain.cpp
 @@ -28,6 +28,7 @@ using namespace std;
@@ -6613,10 +6847,10 @@ index f0bcafafe..ad4a7747c 100644
              + HelpExampleCli("getmempoolinfo", "")
 diff --git a/src/rpcbooking.cpp b/src/rpcbooking.cpp
 new file mode 100644
-index 000000000..aceb93283
+index 0000000..bc3950d
 --- /dev/null
 +++ b/src/rpcbooking.cpp
-@@ -0,0 +1,1178 @@
+@@ -0,0 +1,1355 @@
 +// Copyright (c) 2010 Satoshi Nakamoto
 +// Copyright (c) 2009-2015 The Bitcoin Core developers
 +// Distributed under the MIT software license, see the accompanying
@@ -6645,6 +6879,7 @@ index 000000000..aceb93283
 +
 +#include <boost/assign/list_of.hpp>
 +#include <boost/shared_ptr.hpp>
++#include <fstream>
 +
 +#include <univalue.h>
 +
@@ -6709,6 +6944,100 @@ index 000000000..aceb93283
 +    mapArgs["-gen"] = (fGenerate ? "1" : "0");
 +    mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
 +    GenerateBitcoins(fGenerate, nGenProcLimit, Params());
++
++    return NullUniValue;
++}
++
++UniValue getopgenerate(const UniValue& params, bool fHelp)
++{
++    if (fHelp || params.size() != 0)
++        throw runtime_error(
++            "getopgenerate\n"
++            "\nReturn if the server is set to generate operator block or not. The default is false.\n"
++            "It is set with the command line argument -operatorkey\n"
++            "It can also be set with the setopgenerate call.\n"
++            "\nResult\n"
++            "true|false      (boolean) If the server is set to generate coins or not\n"
++            "\nExamples:\n"
++            + HelpExampleCli("getopgenerate", "")
++            + HelpExampleRpc("getopgenerate", "")
++        );
++
++    LOCK(cs_main);
++    return pKeyOperator != NULL;
++}
++
++UniValue setopgenerate(const UniValue& params, bool fHelp)
++{
++    if (fHelp || (params.size() != 1 && params.size() != 3))
++        throw runtime_error(
++            "setopgenerate generate operatorkeyencrypted passwordpipe\n"
++            "\nSet 'generate' true or false to turn operator block generation on or off.\n"
++            "See the getopgenerate call for the current setting.\n"
++            "\nArguments:\n"
++            "1. generate         (boolean, required) Set to true to turn on generation, off to turn off.\n"
++            "2. operatorkeyencrypted (string, required when generate if true) Set the encrypted operator key when generation is on, pass word is required.\n"
++            "3. passwordpipe (string, required when generate if true) Pipe path from which password come in.\n"
++            "\nExamples:\n"
++            "\nSet the generation on with encrypted operator key\n"
++            + HelpExampleCli("setgenerate", "true eZiPeatVt426hYSajp96ym9QNwTXf4UKewiCHkWkm79aknroN1dKGn4hm9bMUbK4toY9ytinWUZoVNLnPeBQrVYjsn6QXS6ZuLb76sUDHCmMeujQXNQ") +
++            "\nCheck the setting\n"
++            + HelpExampleCli("getopgenerate", "") +
++            "\nTurn off generation\n"
++            + HelpExampleCli("setopgenerate", "false") +
++            "\nUsing json rpc\n"
++            + HelpExampleRpc("setopgenerate", "false")
++        );
++
++    bool fGenerate = params[0].get_bool();
++
++    LOCK(cs_main);
++
++    if (fGenerate) {
++        if (params.size() == 1) throw runtime_error("Encrypted operator key required.");
++        if (params.size() == 2) throw runtime_error("Pass word pipe path.");
++
++        std::string strOperatorKeyEncrypted = params[1].get_str();
++
++        std::ifstream streamPassWord(params[2].get_str().c_str());
++        if (!streamPassWord.good()) throw runtime_error("Password pipe path wrong.");
++
++        std::string strOperatorKeyPassword;
++        std::getline(streamPassWord, strOperatorKeyPassword);
++        streamPassWord.close();
++
++        CKeyingMaterial vOperatorKeyPassword;
++        vOperatorKeyPassword.resize(32);
++
++        CSHA256().Write((const unsigned char*)strOperatorKeyPassword.data(), strOperatorKeyPassword.size()).Finalize(&(vOperatorKeyPassword[0]));
++        CSHA256().Write(&(vOperatorKeyPassword[0]), vOperatorKeyPassword.size()).Finalize(&(vOperatorKeyPassword[0]));
++
++        // CKeyingMaterial strOperatorKeyPassword = getpassword("Input pass word for the operator key: ");
++        // pk + encrypted key seed by (pass word hash, iv(pkhash))
++        std::vector<unsigned char> vchOperatorKeyEncrypted;
++        if (DecodeBase58Check(strOperatorKeyEncrypted, vchOperatorKeyEncrypted)) {
++            CPubKey pk(vchOperatorKeyEncrypted.begin(), vchOperatorKeyEncrypted.begin() + 33);
++            pKeyOperator = new CKey;
++            if (!DecryptKey(vOperatorKeyPassword, std::vector<unsigned char>(vchOperatorKeyEncrypted.begin() + 33, vchOperatorKeyEncrypted.end()), pk, *pKeyOperator)) {
++                delete pKeyOperator;
++                pKeyOperator = NULL;
++                throw runtime_error("Pass word and encrypted key do not match well.");
++            }
++            else {
++                GenerateOperatorBlocks(true); // Start the thread
++            }
++        }
++
++    }
++    else {
++        if (params.size() != 1) throw runtime_error("Too much parameters.");
++
++        GenerateOperatorBlocks(false); // Stop the thread
++
++        delete pKeyOperator;
++        pKeyOperator = NULL;
++
++    }
 +
 +    return NullUniValue;
 +}
@@ -6852,19 +7181,80 @@ index 000000000..aceb93283
 +
 +}
 +
++UniValue getprivaddr(const UniValue& params, bool fHelp) {
++
++    if (fHelp || params.size() != 0 )
++        throw runtime_error(
++
++            "getprivaddr"
++            "Returns the current root and operator addresses of the block chain.\n"
++            "\nResult:\n"
++            "{\n"
++            "  \"bestblockhash\",     (string) hex string of the best block hash\n"
++            "  \"chainheight\",       (int) height the best block\n"
++            "  \"rootaddress\",       (string) the address of the chain root\n"
++            "  \"operatoraddress\",   (string) the address of the chain operator\n"
++            "}\n"
++        );
++
++    //////////////////////////////////////////////////////////////////////////////////////////////
++    LOCK(cs_main);
++
++    // Update block
++    CBlockIndex* tip = chainActive.Tip();
++
++    int nOperatorHeight = tip->nOperatorHeight;
++    int nRootHeight = tip->nRootHeight;
++
++    while (nRootHeight > nOperatorHeight) {
++        if (chainActive[nRootHeight]->WithData(BLOCK_OPERATOR)) {
++            nOperatorHeight = nRootHeight;
++            break;
++        }
++        nRootHeight = chainActive[nRootHeight]->pprev->nRootHeight;
++    }
++
++    const uint160 *idNextOperator = chainActive[nOperatorHeight]->idNextOperatorPubKey;
++    const uint160* idRoot = chainActive[nRootHeight]->idNextRootScript;
++
++    CBlockIndex *bi = tip;
++    const uint160* pIdWizard = NULL;
++
++    // Iterate back through active chain for wizard id. Wizard transaction is rare, and thus no serious performance penalty.
++    while (bi) {
++        if (bi->nStatus & BLOCK_WIZARD) {
++            pIdWizard = bi->idNextWizardScript;
++            break;
++        }
++        bi = bi->pprev;
++    }
++
++    UniValue result(UniValue::VOBJ);
++
++    result.push_back(Pair("bestblockhash", tip->GetBlockHash().ToString()));
++    result.push_back(Pair("chainheight", tip->nHeight));
++    result.push_back(Pair("rootaddress", CBitcoinAddress(CScriptID(*idRoot)).ToString()));
++    result.push_back(Pair("operatoraddress", CBitcoinAddress(CKeyID(*idNextOperator)).ToString()));
++    if (pIdWizard != NULL) {
++        result.push_back(Pair("wizardaddress", CBitcoinAddress(CKeyID(*pIdWizard)).ToString()));
++    }
++
++    return result;
++
++}
 +// Operator action does authorization of user ids, changing pos time weighting curve, at the same time refreshes the operator public key id
 +UniValue operatoraction(const UniValue& params, bool fHelp) {
 +
 +    if (fHelp || params.size() != 1 )
 +        throw runtime_error(
 +
-+            "operatoraction {\"signprogram\":\"path_to_signing_program\",\"auth\":[\"id0\", ...], \"revoke\":[\"id0\", ...],\"posdecay\":[\"point0\", \"weight0\", ...] }" 
++            "operatoraction {\"operatorkey\":\"encrypted_operator_key\",\"auth\":[\"id0\", ...], \"revoke\":[\"id0\", ...],\"posdecay\":[\"point0\", \"weight0\", ...] }" 
 +            "\nTry to do an operational action to the block chain.\n"
 +            "Returns the hash of the new priviledged block.\n"
 +            "\nArgument:\n"
 +            "\"operation\"        A json object\n"
 +            "   {\n"
-+            "       \"signprogram\":\"path_to_signing_program\", (string required) the external program for signing transaction and block\n"
++            "       \"operatorkey\": {\"keytext\":\"encrypted_operator_key\",\"passwordpipe\":\"path_to_pipe_to_read_password\"}, (object, optional) the new operator key encrytped and password pipe path\n"
 +            "       \"auth\":[\"id0\", ...], (array of address, optional) addresses to authorize\n"
 +            "       \"revoke\":[\"id0\", ...], (array of address, optional) addresses to revoke\n"
 +            "       \"posdecay\":[\"point0\", \"weight0\"...], (array of integers, optional) set time weighting curve for POS\n"
@@ -6877,21 +7267,42 @@ index 000000000..aceb93283
 +        );
 +
 +    RPCTypeCheck(params, boost::assign::list_of(UniValue::VOBJ), false);
-+    // RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM)(UniValue::VNUM), false);
-+
-+    // ostringstream stringStream;
-+
-+    // stringStream << "first num: " << params[0].get_int() << "second num: " << params[1].get_int();
-+    // stringStream << "first num: " << params[0].get_str() << " second num: " << params[1].get_str();
-+    
-+    // throw JSONRPCError(RPC_INVALID_PARAMETER, stringStream.str());
 +
 +    UniValue operation = params[0].get_obj();
-+    UniValue obj = find_value(operation, "signprogram");
++    UniValue obj = find_value(operation, "operatorkey");
 +
-+    if (!obj.isStr())
-+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing signprogram key");
-+    string signProgram = obj.get_str();
++    UniValue uvKeyText = find_value(obj, "keytext");
++    UniValue uvPasswordPipe = find_value(obj, "passwordpipe");
++
++    CKey *pNewKeyOperator = NULL;
++
++    if (obj.isObject() && uvKeyText.isStr() && uvPasswordPipe.isStr()) {
++
++        std::string strOperatorKeyEncrypted = uvKeyText.get_str();
++        std::ifstream streamPassWord(uvPasswordPipe.get_str().c_str());
++
++        if (!streamPassWord.good()) throw runtime_error("Password pipe path wrong.");
++
++        std::string strOperatorKeyPassword;
++        std::getline(streamPassWord, strOperatorKeyPassword);
++        streamPassWord.close();
++
++        CKeyingMaterial vOperatorKeyPassword;
++        vOperatorKeyPassword.resize(32);
++
++        CSHA256().Write((const unsigned char*)strOperatorKeyPassword.data(), strOperatorKeyPassword.size()).Finalize(&(vOperatorKeyPassword[0]));
++        CSHA256().Write(&(vOperatorKeyPassword[0]), vOperatorKeyPassword.size()).Finalize(&(vOperatorKeyPassword[0]));
++        // pk + encrypted key seed by (pass word hash, iv(pkhash))
++        std::vector<unsigned char> vchOperatorKeyEncrypted;
++        if (DecodeBase58Check(strOperatorKeyEncrypted, vchOperatorKeyEncrypted)) {
++            CPubKey pk(vchOperatorKeyEncrypted.begin(), vchOperatorKeyEncrypted.begin() + 33);
++            pNewKeyOperator = new CKey;
++            if (!DecryptKey(vOperatorKeyPassword, std::vector<unsigned char>(vchOperatorKeyEncrypted.begin() + 33, vchOperatorKeyEncrypted.end()), pk, *pNewKeyOperator)) {
++                delete pNewKeyOperator;
++                throw JSONRPCError(RPC_INVALID_PARAMETER, "Pass word and encrypted key do not match well.");
++            }
++        }
++    }
 +
 +    set<suint160> sIdAuthorized;
 +    set<suint160> sIdRevoked;
@@ -6979,13 +7390,13 @@ index 000000000..aceb93283
 +
 +    const uint160 *idNextOperator = chainActive[nOperatorHeight]->idNextOperatorPubKey;
 +
++    if (!pKeyOperator || (uint160)(pKeyOperator->GetPubKey().GetID()) != *idNextOperator)
++        throw JSONRPCError(RPC_INVALID_PARAMETER, "Operator key not planted on node.");
++
 +    vector<unsigned char> vBinary;
 +
-+    // The signing program will return the next operator id
-+    vBinary = OperatorGetNextID(signProgram);
-+
-+    if (vBinary.size() != 20)
-+        throw JSONRPCError(RPC_OUT_OF_MEMORY, "Sign program: failed to get next operater id");
++    if (pNewKeyOperator) vBinary = ToByteVector(pNewKeyOperator->GetPubKey().GetID());
++    else vBinary = ToByteVector(*idNextOperator);
 +
 +    CScript scriptAuth = CScript() << OP_RETURN << vBinary;
 +
@@ -7036,10 +7447,12 @@ index 000000000..aceb93283
 +
 +    vector<unsigned char> vSignature;
 +
-+    if (!OperatorSignHash(signProgram, *idNextOperator, hash, vSignature)) goto signerror;
++    if (!pKeyOperator->Sign(hash, vSignature)) goto signerror;
 +
-+    txNew.vin[0].scriptSig = CScript(vSignature.begin(), vSignature.end());
-+    
++    vSignature.push_back('\x01');
++
++    txNew.vin[0].scriptSig = CScript() << vSignature << ToByteVector(pKeyOperator->GetPubKey());
++
 +    goto signblock;
 +
 +signerror:
@@ -7057,13 +7470,11 @@ index 000000000..aceb93283
 +
 +    hash = SignatureHash(operatorRedeemScript, ctx, 0, SIGHASH_ALL);
 +
-+    if (!OperatorSignHash(signProgram, *idNextOperator, hash, vSignature))
-+        throw JSONRPCError(RPC_OUT_OF_MEMORY, "Sign program: failed to sign priviledged block");
++    if (!pKeyOperator->Sign(hash, vSignature)) throw JSONRPCError(RPC_OUT_OF_MEMORY, "Sign program: failed to sign priviledged block");
 +
-+    pblock->vchBlockSig = CScript(vSignature.begin(), vSignature.end());
++    vSignature.push_back('\x01');
 +
-+    // Dump last element to trash box to avoid redundance
-+    pblock->vchBlockSig >> vSignature;
++    pblock->vchBlockSig = CScript() << vSignature;
 +
 +    CValidationState state;
 +    if (!TestBlockValidity(state, Params(), *pblock, tip)) {
@@ -7796,10 +8207,18 @@ index 000000000..aceb93283
 +    return BIP22ValidationResult(state);
 +}
 diff --git a/src/rpcclient.cpp b/src/rpcclient.cpp
-index 047158023..621014491 100644
+index 0471580..2dae238 100644
 --- a/src/rpcclient.cpp
 +++ b/src/rpcclient.cpp
-@@ -35,7 +35,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
+@@ -30,12 +30,13 @@ static const CRPCConvertParam vRPCConvertParams[] =
+     { "getaddednodeinfo", 0 },
+     { "setgenerate", 0 },
+     { "setgenerate", 1 },
+-    { "generate", 0 },
++    { "setopgenerate", 0 },
++    { "setopgenerate", 1 },
++    // { "generate", 0 },
+     { "getnetworkhashps", 0 },
      { "getnetworkhashps", 1 },
      { "sendtoaddress", 1 },
      { "sendtoaddress", 4 },
@@ -7807,17 +8226,26 @@ index 047158023..621014491 100644
      { "getreceivedbyaddress", 1 },
      { "getreceivedbyaccount", 1 },
      { "listreceivedbyaddress", 0 },
-@@ -56,6 +55,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
+@@ -56,6 +57,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
      { "listtransactions", 3 },
      { "listaccounts", 0 },
      { "listaccounts", 1 },
++    { "getprivaddr", 0 },
 +    { "operatoraction", 0 },
 +    { "wizardtransfer", 0 },
 +    { "rootaction", 0 },
      { "walletpassphrase", 1 },
      { "getblocktemplate", 0 },
      { "listsinceblock", 1 },
-@@ -94,12 +96,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
+@@ -70,6 +75,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
+     { "listunspent", 0 },
+     { "listunspent", 1 },
+     { "listunspent", 2 },
++    { "listunspent", 3 },
+     { "getblock", 1 },
+     { "getblockheader", 1 },
+     { "gettransaction", 1 },
+@@ -94,12 +100,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
      { "verifychain", 1 },
      { "keypoolrefill", 0 },
      { "getrawmempool", 0 },
@@ -7832,7 +8260,7 @@ index 047158023..621014491 100644
  };
 diff --git a/src/rpcmining.cpp b/src/rpcmining.cpp
 deleted file mode 100644
-index 1048344e0..000000000
+index 1048344..0000000
 --- a/src/rpcmining.cpp
 +++ /dev/null
 @@ -1,800 +0,0 @@
@@ -8637,7 +9065,7 @@ index 1048344e0..000000000
 -    return result;
 -}
 diff --git a/src/rpcmisc.cpp b/src/rpcmisc.cpp
-index 9871c3fcc..31745c2af 100644
+index 9871c3f..31745c2 100644
 --- a/src/rpcmisc.cpp
 +++ b/src/rpcmisc.cpp
 @@ -60,8 +60,6 @@ UniValue getinfo(const UniValue& params, bool fHelp)
@@ -8669,7 +9097,7 @@ index 9871c3fcc..31745c2af 100644
      return obj;
  }
 diff --git a/src/rpcnet.cpp b/src/rpcnet.cpp
-index 779e7fbc6..bb5c64eec 100644
+index 779e7fb..bb5c64e 100644
 --- a/src/rpcnet.cpp
 +++ b/src/rpcnet.cpp
 @@ -446,7 +446,6 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
@@ -8689,10 +9117,18 @@ index 779e7fbc6..bb5c64eec 100644
      {
          LOCK(cs_mapLocalHost);
 diff --git a/src/rpcrawtransaction.cpp b/src/rpcrawtransaction.cpp
-index bd51aa0ab..f1dc1c0e7 100644
+index bd51aa0..8f85045 100644
 --- a/src/rpcrawtransaction.cpp
 +++ b/src/rpcrawtransaction.cpp
-@@ -151,7 +151,7 @@ UniValue getrawtransaction(const UniValue& params, bool fHelp)
+@@ -101,6 +101,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
+         if (mi != mapBlockIndex.end() && (*mi).second) {
+             CBlockIndex* pindex = (*mi).second;
+             if (chainActive.Contains(pindex)) {
++                entry.push_back(Pair("checked", chainActive.Tip()->nRootHeight >= pindex->nHeight || chainActive.Tip()->nOperatorHeight >= pindex->nHeight));
+                 entry.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
+                 entry.push_back(Pair("time", pindex->GetBlockTime()));
+                 entry.push_back(Pair("blocktime", pindex->GetBlockTime()));
+@@ -151,7 +152,7 @@ UniValue getrawtransaction(const UniValue& params, bool fHelp)
              "  ],\n"
              "  \"vout\" : [              (array of json objects)\n"
              "     {\n"
@@ -8701,7 +9137,7 @@ index bd51aa0ab..f1dc1c0e7 100644
              "       \"n\" : n,                    (numeric) index\n"
              "       \"scriptPubKey\" : {          (json object)\n"
              "         \"asm\" : \"asm\",          (string) the asm\n"
-@@ -338,7 +338,7 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
+@@ -338,7 +339,7 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
              "     ]\n"
              "2. \"outputs\"             (string, required) a json object with outputs\n"
              "    {\n"
@@ -8710,7 +9146,7 @@ index bd51aa0ab..f1dc1c0e7 100644
              "      \"data\": \"hex\",     (string, required) The key is \"data\", the value is hex encoded data\n"
              "      ...\n"
              "    }\n"
-@@ -347,10 +347,10 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
+@@ -347,10 +348,10 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
              "\"transaction\"            (string) hex string of the transaction\n"
  
              "\nExamples\n"
@@ -8725,7 +9161,7 @@ index bd51aa0ab..f1dc1c0e7 100644
          );
  
      LOCK(cs_main);
-@@ -396,7 +396,7 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
+@@ -396,7 +397,7 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
          if (name_ == "data") {
              std::vector<unsigned char> data = ParseHexV(sendTo[name_].getValStr(),"Data");
  
@@ -8734,7 +9170,7 @@ index bd51aa0ab..f1dc1c0e7 100644
              rawTx.vout.push_back(out);
          } else {
              CBitcoinAddress address(name_);
-@@ -408,10 +408,16 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
+@@ -408,10 +409,16 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
              setAddress.insert(address);
  
              CScript scriptPubKey = GetScriptForDestination(address.Get());
@@ -8754,7 +9190,7 @@ index bd51aa0ab..f1dc1c0e7 100644
          }
      }
  
-@@ -448,7 +454,7 @@ UniValue decoderawtransaction(const UniValue& params, bool fHelp)
+@@ -448,7 +455,7 @@ UniValue decoderawtransaction(const UniValue& params, bool fHelp)
              "  ],\n"
              "  \"vout\" : [             (array of json objects)\n"
              "     {\n"
@@ -8763,7 +9199,7 @@ index bd51aa0ab..f1dc1c0e7 100644
              "       \"n\" : n,                    (numeric) index\n"
              "       \"scriptPubKey\" : {          (json object)\n"
              "         \"asm\" : \"asm\",          (string) the asm\n"
-@@ -697,7 +703,7 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
+@@ -697,7 +704,7 @@ UniValue signrawtransaction(const UniValue& params, bool fHelp)
                  if ((unsigned int)nOut >= coins->vout.size())
                      coins->vout.resize(nOut+1);
                  coins->vout[nOut].scriptPubKey = scriptPubKey;
@@ -8772,7 +9208,7 @@ index bd51aa0ab..f1dc1c0e7 100644
              }
  
              // if redeemScript given and not using the local wallet (private keys
-@@ -783,12 +789,11 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
+@@ -783,12 +790,11 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
  {
      if (fHelp || params.size() < 1 || params.size() > 2)
          throw runtime_error(
@@ -8786,7 +9222,7 @@ index bd51aa0ab..f1dc1c0e7 100644
              "\nResult:\n"
              "\"hex\"             (string) The transaction hash in hex\n"
              "\nExamples:\n"
-@@ -811,10 +816,6 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
+@@ -811,10 +817,6 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
          throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
      uint256 hashTx = tx.GetHash();
  
@@ -8797,7 +9233,7 @@ index bd51aa0ab..f1dc1c0e7 100644
      CCoinsViewCache &view = *pcoinsTip;
      const CCoins* existingCoins = view.AccessCoins(hashTx);
      bool fHaveMempool = mempool.exists(hashTx);
-@@ -823,7 +824,7 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
+@@ -823,7 +825,7 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
          // push to local node and sync with wallets
          CValidationState state;
          bool fMissingInputs;
@@ -8807,10 +9243,18 @@ index bd51aa0ab..f1dc1c0e7 100644
                  throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
              } else {
 diff --git a/src/rpcserver.cpp b/src/rpcserver.cpp
-index b3abeec4a..76fb46960 100644
+index b3abeec..69574fa 100644
 --- a/src/rpcserver.cpp
 +++ b/src/rpcserver.cpp
-@@ -106,26 +106,65 @@ void RPCTypeCheckObj(const UniValue& o,
+@@ -24,6 +24,7 @@
+ #include <boost/signals2/signal.hpp>
+ #include <boost/thread.hpp>
+ #include <boost/algorithm/string/case_conv.hpp> // for to_upper()
++#include <boost/lexical_cast.hpp>
+ 
+ using namespace RPCServer;
+ using namespace std;
+@@ -106,26 +107,65 @@ void RPCTypeCheckObj(const UniValue& o,
      }
  }
  
@@ -8859,10 +9303,10 @@ index b3abeec4a..76fb46960 100644
 -    int64_t remainder = n_abs % COIN;
 -    return UniValue(UniValue::VNUM,
 -            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
-+    UniValue ret(UniValue::VARR);
++    UniValue ret(UniValue::VOBJ);
 +    BOOST_FOREACH(const CValue &cval, amount) {
 +        if (cval.second == 0) continue;
-+        ret.push_back(ValueFromAmount(cval));
++        ret.push_back(Pair(boost::lexical_cast<std::string>(cval.first), cval.second));
 +    }
 +
 +    return ret;
@@ -8887,7 +9331,7 @@ index b3abeec4a..76fb46960 100644
  }
  
  uint256 ParseHashV(const UniValue& v, string strName)
-@@ -281,7 +320,7 @@ static const CRPCCommand vRPCCommands[] =
+@@ -281,7 +321,7 @@ static const CRPCCommand vRPCCommands[] =
      { "blockchain",         "getblockhash",           &getblockhash,           true  },
      { "blockchain",         "getblockheader",         &getblockheader,         true  },
      { "blockchain",         "getchaintips",           &getchaintips,           true  },
@@ -8896,26 +9340,32 @@ index b3abeec4a..76fb46960 100644
      { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
      { "blockchain",         "getrawmempool",          &getrawmempool,          true  },
      { "blockchain",         "gettxout",               &gettxout,               true  },
-@@ -290,18 +329,6 @@ static const CRPCCommand vRPCCommands[] =
-     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
+@@ -291,16 +331,21 @@ static const CRPCCommand vRPCCommands[] =
      { "blockchain",         "verifychain",            &verifychain,            true  },
  
--    /* Mining */
--    { "mining",             "getblocktemplate",       &getblocktemplate,       true  },
--    { "mining",             "getmininginfo",          &getmininginfo,          true  },
+     /* Mining */
++    { "mining",             "getprivaddr",         &getprivaddr,       true  },
++    { "mining",             "operatoraction",         &operatoraction,       true  },
++    { "mining",             "rootaction",         &rootaction,       true  },
++    { "mining",             "wizardtransfer",         &wizardtransfer,       true  },
+     { "mining",             "getblocktemplate",       &getblocktemplate,       true  },
+     { "mining",             "getmininginfo",          &getmininginfo,          true  },
 -    { "mining",             "getnetworkhashps",       &getnetworkhashps,       true  },
 -    { "mining",             "prioritisetransaction",  &prioritisetransaction,  true  },
--    { "mining",             "submitblock",            &submitblock,            true  },
--
--    /* Coin generation */
--    { "generating",         "getgenerate",            &getgenerate,            true  },
--    { "generating",         "setgenerate",            &setgenerate,            true  },
++    // { "mining",             "getnetworkhashps",       &getnetworkhashps,       true  },
+     { "mining",             "submitblock",            &submitblock,            true  },
+ 
+     /* Coin generation */
+     { "generating",         "getgenerate",            &getgenerate,            true  },
+     { "generating",         "setgenerate",            &setgenerate,            true  },
 -    { "generating",         "generate",               &generate,               true  },
--
++    { "generating",         "getopgenerate",          &getopgenerate,          true  },
++    { "generating",         "setopgenerate",          &setopgenerate,          true  },
++    //{ "generating",         "generate",               &generate,               true  },
+ 
      /* Raw transactions */
      { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true  },
-     { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true  },
-@@ -317,11 +344,6 @@ static const CRPCCommand vRPCCommands[] =
+@@ -317,11 +362,6 @@ static const CRPCCommand vRPCCommands[] =
      { "util",               "createmultisig",         &createmultisig,         true  },
      { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */
      { "util",               "verifymessage",          &verifymessage,          true  },
@@ -8927,7 +9377,7 @@ index b3abeec4a..76fb46960 100644
      /* Not shown in help */
      { "hidden",             "invalidateblock",        &invalidateblock,        true  },
      { "hidden",             "reconsiderblock",        &reconsiderblock,        true  },
-@@ -336,6 +358,7 @@ static const CRPCCommand vRPCCommands[] =
+@@ -336,6 +376,7 @@ static const CRPCCommand vRPCCommands[] =
      { "wallet",             "backupwallet",           &backupwallet,           true  },
      { "wallet",             "dumpprivkey",            &dumpprivkey,            true  },
      { "wallet",             "dumpwallet",             &dumpwallet,             true  },
@@ -8935,7 +9385,7 @@ index b3abeec4a..76fb46960 100644
      { "wallet",             "encryptwallet",          &encryptwallet,          true  },
      { "wallet",             "getaccountaddress",      &getaccountaddress,      true  },
      { "wallet",             "getaccount",             &getaccount,             true  },
-@@ -368,7 +391,6 @@ static const CRPCCommand vRPCCommands[] =
+@@ -368,7 +409,6 @@ static const CRPCCommand vRPCCommands[] =
      { "wallet",             "sendmany",               &sendmany,               false },
      { "wallet",             "sendtoaddress",          &sendtoaddress,          false },
      { "wallet",             "setaccount",             &setaccount,             true  },
@@ -8944,7 +9394,7 @@ index b3abeec4a..76fb46960 100644
      { "wallet",             "walletlock",             &walletlock,             true  },
      { "wallet",             "walletpassphrasechange", &walletpassphrasechange, true  },
 diff --git a/src/rpcserver.h b/src/rpcserver.h
-index babf7c8d2..78bdfc93e 100644
+index babf7c8..c61d1a5 100644
 --- a/src/rpcserver.h
 +++ b/src/rpcserver.h
 @@ -156,9 +156,12 @@ extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strNa
@@ -8962,7 +9412,7 @@ index babf7c8d2..78bdfc93e 100644
  extern std::string HelpRequiringPassphrase();
  extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
  extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
-@@ -181,20 +184,19 @@ extern UniValue importprivkey(const UniValue& params, bool fHelp);
+@@ -181,20 +184,22 @@ extern UniValue importprivkey(const UniValue& params, bool fHelp);
  extern UniValue importaddress(const UniValue& params, bool fHelp);
  extern UniValue importpubkey(const UniValue& params, bool fHelp);
  extern UniValue dumpwallet(const UniValue& params, bool fHelp);
@@ -8973,10 +9423,13 @@ index babf7c8d2..78bdfc93e 100644
  extern UniValue setgenerate(const UniValue& params, bool fHelp);
 -extern UniValue generate(const UniValue& params, bool fHelp);
 -extern UniValue getnetworkhashps(const UniValue& params, bool fHelp);
++extern UniValue getopgenerate(const UniValue& params, bool fHelp);
++extern UniValue setopgenerate(const UniValue& params, bool fHelp);
 +// extern UniValue generate(const UniValue& params, bool fHelp);
 +// extern UniValue getnetworkhashps(const UniValue& params, bool fHelp);
  extern UniValue getmininginfo(const UniValue& params, bool fHelp);
 -extern UniValue prioritisetransaction(const UniValue& params, bool fHelp);
++extern UniValue getprivaddr(const UniValue& params, bool fHelp);
 +extern UniValue operatoraction(const UniValue& params, bool fHelp);
 +extern UniValue rootaction(const UniValue& params, bool fHelp);
 +extern UniValue wizardtransfer(const UniValue& params, bool fHelp);
@@ -8989,7 +9442,7 @@ index babf7c8d2..78bdfc93e 100644
  
  extern UniValue getnewaddress(const UniValue& params, bool fHelp); // in rpcwallet.cpp
  extern UniValue getaccountaddress(const UniValue& params, bool fHelp);
-@@ -251,8 +253,7 @@ extern UniValue verifytxoutproof(const UniValue& params, bool fHelp);
+@@ -251,8 +256,7 @@ extern UniValue verifytxoutproof(const UniValue& params, bool fHelp);
  
  extern UniValue getblockcount(const UniValue& params, bool fHelp); // in rpcblockchain.cpp
  extern UniValue getbestblockhash(const UniValue& params, bool fHelp);
@@ -9000,7 +9453,7 @@ index babf7c8d2..78bdfc93e 100644
  extern UniValue getrawmempool(const UniValue& params, bool fHelp);
  extern UniValue getblockhash(const UniValue& params, bool fHelp);
 diff --git a/src/script/script.cpp b/src/script/script.cpp
-index 9f2809e59..144a13fa8 100644
+index 9f2809e..144a13f 100644
 --- a/src/script/script.cpp
 +++ b/src/script/script.cpp
 @@ -204,10 +204,25 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
@@ -9056,7 +9509,7 @@ index 9f2809e59..144a13fa8 100644
 +    return *this;
 +}
 diff --git a/src/script/script.h b/src/script/script.h
-index d2a68a07b..4f8798b63 100644
+index d2a68a0..4f8798b 100644
 --- a/src/script/script.h
 +++ b/src/script/script.h
 @@ -469,6 +469,7 @@ public:
@@ -9068,7 +9521,7 @@ index d2a68a07b..4f8798b63 100644
      bool GetOp(iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet)
      {
 diff --git a/src/script/standard.cpp b/src/script/standard.cpp
-index 67b6af327..eeda3c391 100644
+index 67b6af3..eeda3c3 100644
 --- a/src/script/standard.cpp
 +++ b/src/script/standard.cpp
 @@ -38,8 +38,27 @@ const char* GetTxnOutputType(txnouttype t)
@@ -9101,7 +9554,7 @@ index 67b6af327..eeda3c391 100644
      static multimap<txnouttype, CScript> mTemplates;
      if (mTemplates.empty())
 diff --git a/src/script/standard.h b/src/script/standard.h
-index 64bf010ec..487b1ba06 100644
+index 64bf010..487b1ba 100644
 --- a/src/script/standard.h
 +++ b/src/script/standard.h
 @@ -27,7 +27,9 @@ public:
@@ -9134,7 +9587,7 @@ index 64bf010ec..487b1ba06 100644
  bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
  
 diff --git a/src/sync.cpp b/src/sync.cpp
-index 8df8ae43f..bc25d9ef6 100644
+index 8df8ae4..bc25d9e 100644
 --- a/src/sync.cpp
 +++ b/src/sync.cpp
 @@ -56,11 +56,24 @@ private:
@@ -9241,7 +9694,7 @@ index 8df8ae43f..bc25d9ef6 100644
 +
  #endif /* DEBUG_LOCKORDER */
 diff --git a/src/sync.h b/src/sync.h
-index 34dd8c228..0c58fb6b4 100644
+index 34dd8c2..0c58fb6 100644
 --- a/src/sync.h
 +++ b/src/sync.h
 @@ -71,30 +71,39 @@ public:
@@ -9297,7 +9750,7 @@ index 34dd8c228..0c58fb6b4 100644
  void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
  #endif
 diff --git a/src/txdb.cpp b/src/txdb.cpp
-index f99e11f26..6b2688c85 100644
+index f99e11f..6b2688c 100644
 --- a/src/txdb.cpp
 +++ b/src/txdb.cpp
 @@ -9,7 +9,6 @@
@@ -9405,7 +9858,7 @@ index f99e11f26..6b2688c85 100644
                  pcursor->Next();
              } else {
 diff --git a/src/txdb.h b/src/txdb.h
-index 22e0c5704..d22e8aade 100644
+index 22e0c57..d22e8aa 100644
 --- a/src/txdb.h
 +++ b/src/txdb.h
 @@ -60,6 +60,11 @@ public:
@@ -9421,7 +9874,7 @@ index 22e0c5704..d22e8aade 100644
  
  #endif // BITCOIN_TXDB_H
 diff --git a/src/txmempool.cpp b/src/txmempool.cpp
-index 5f814749b..5023cb0bb 100644
+index 5f81474..5023cb0 100644
 --- a/src/txmempool.cpp
 +++ b/src/txmempool.cpp
 @@ -9,7 +9,6 @@
@@ -9853,7 +10306,7 @@ index 5f814749b..5023cb0bb 100644
 -        LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
  }
 diff --git a/src/txmempool.h b/src/txmempool.h
-index 5997346b0..77c32dd65 100644
+index 5997346..77c32dd 100644
 --- a/src/txmempool.h
 +++ b/src/txmempool.h
 @@ -21,18 +21,6 @@
@@ -10178,7 +10631,7 @@ index 5997346b0..77c32dd65 100644
 -
  #endif // BITCOIN_TXMEMPOOL_H
 diff --git a/src/utilmoneystr.cpp b/src/utilmoneystr.cpp
-index bebe56130..ccc752519 100644
+index bebe561..ccc7525 100644
 --- a/src/utilmoneystr.cpp
 +++ b/src/utilmoneystr.cpp
 @@ -11,53 +11,58 @@
@@ -10283,7 +10736,7 @@ index bebe56130..ccc752519 100644
      return true;
  }
 diff --git a/src/utilmoneystr.h b/src/utilmoneystr.h
-index 5839b0734..e3ae8f417 100644
+index 5839b07..e3ae8f4 100644
 --- a/src/utilmoneystr.h
 +++ b/src/utilmoneystr.h
 @@ -14,8 +14,11 @@
@@ -10302,7 +10755,7 @@ index 5839b0734..e3ae8f417 100644
  
  #endif // BITCOIN_UTILMONEYSTR_H
 diff --git a/src/utilstrencodings.cpp b/src/utilstrencodings.cpp
-index 130bc997b..88d9b71ae 100644
+index 130bc99..88d9b71 100644
 --- a/src/utilstrencodings.cpp
 +++ b/src/utilstrencodings.cpp
 @@ -542,123 +542,3 @@ int atoi(const std::string& str)
@@ -10430,7 +10883,7 @@ index 130bc997b..88d9b71ae 100644
 -}
 -
 diff --git a/src/utilstrencodings.h b/src/utilstrencodings.h
-index d40613cfc..18f389e53 100644
+index d40613c..18f389e 100644
 --- a/src/utilstrencodings.h
 +++ b/src/utilstrencodings.h
 @@ -22,6 +22,7 @@
@@ -10454,7 +10907,7 @@ index d40613cfc..18f389e53 100644
 -
  #endif // BITCOIN_UTILSTRENCODINGS_H
 diff --git a/src/validationinterface.cpp b/src/validationinterface.cpp
-index 81f3b775f..46f4a7e30 100644
+index 81f3b77..46f4a7e 100644
 --- a/src/validationinterface.cpp
 +++ b/src/validationinterface.cpp
 @@ -20,13 +20,15 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -10486,7 +10939,7 @@ index 81f3b775f..46f4a7e30 100644
      g_signals.Broadcast.disconnect_all_slots();
      g_signals.Inventory.disconnect_all_slots();
 diff --git a/src/validationinterface.h b/src/validationinterface.h
-index 4da145473..22cdd4b24 100644
+index 4da1454..22cdd4b 100644
 --- a/src/validationinterface.h
 +++ b/src/validationinterface.h
 @@ -38,7 +38,8 @@ protected:
@@ -10509,8 +10962,32 @@ index 4da145473..22cdd4b24 100644
      /** Notifies listeners that a block has been successfully mined */
      boost::signals2::signal<void (const uint256 &)> BlockFound;
  };
+diff --git a/src/wallet/crypter.cpp b/src/wallet/crypter.cpp
+index 95aa4c2..6947dc4 100644
+--- a/src/wallet/crypter.cpp
++++ b/src/wallet/crypter.cpp
+@@ -122,7 +122,7 @@ static bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<u
+     return cKeyCrypter.Decrypt(vchCiphertext, *((CKeyingMaterial*)&vchPlaintext));
+ }
+ 
+-static bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key)
++bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key)
+ {
+     CKeyingMaterial vchSecret;
+     if(!DecryptSecret(vMasterKey, vchCryptedSecret, vchPubKey.GetHash(), vchSecret))
+diff --git a/src/wallet/crypter.h b/src/wallet/crypter.h
+index eb06a78..28cd5d2 100644
+--- a/src/wallet/crypter.h
++++ b/src/wallet/crypter.h
+@@ -193,4 +193,6 @@ public:
+     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
+ };
+ 
++bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key);
++
+ #endif // BITCOIN_WALLET_CRYPTER_H
 diff --git a/src/wallet/rpcdump.cpp b/src/wallet/rpcdump.cpp
-index b025c3745..66ae501ea 100644
+index b025c37..66ae501 100644
 --- a/src/wallet/rpcdump.cpp
 +++ b/src/wallet/rpcdump.cpp
 @@ -299,7 +299,7 @@ UniValue importpubkey(const UniValue& params, bool fHelp)
@@ -10620,7 +11097,7 @@ index b025c3745..66ae501ea 100644
 +    return NullUniValue;
 +}
 diff --git a/src/wallet/rpcwallet.cpp b/src/wallet/rpcwallet.cpp
-index ba43b805a..c9a0d6c78 100644
+index ba43b80..686d149 100644
 --- a/src/wallet/rpcwallet.cpp
 +++ b/src/wallet/rpcwallet.cpp
 @@ -22,8 +22,10 @@
@@ -10663,6 +11140,15 @@ index ba43b805a..c9a0d6c78 100644
  }
  
  string AccountFromValue(const UniValue& value)
+@@ -139,7 +149,7 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
+     // Generate a new key that is added to wallet
+     CPubKey newKey;
+     if (!pwalletMain->GetKeyFromPool(newKey))
+-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
++        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first, and then send a transaction");
+     CKeyID keyID = newKey.GetID();
+ 
+     pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 @@ -367,31 +377,36 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
      return ret;
  }
@@ -10856,91 +11342,45 @@ index ba43b805a..c9a0d6c78 100644
      }
  
      // Tally internal accounting entries
-@@ -715,7 +726,7 @@ UniValue getbalance(const UniValue& params, bool fHelp)
-     if (!EnsureWalletIsAvailable(fHelp))
-         return NullUniValue;
-     
--    if (fHelp || params.size() > 3)
-+    if (fHelp || params.size() != 0)
-         throw runtime_error(
-             "getbalance ( \"account\" minconf includeWatchonly )\n"
-             "\nIf account is not specified, returns the server's total available balance.\n"
-@@ -723,66 +734,22 @@ UniValue getbalance(const UniValue& params, bool fHelp)
-             "Note that the account \"\" is not the same as leaving the parameter out.\n"
-             "The server total may be different to the balance in the default \"\" account.\n"
-             "\nArguments:\n"
--            "1. \"account\"      (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
--            "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
--            "3. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
+@@ -727,7 +738,7 @@ UniValue getbalance(const UniValue& params, bool fHelp)
+             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+             "3. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
              "\nResult:\n"
 -            "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
 +            "amount              (numeric) The total amount received for this account.\n"
              "\nExamples:\n"
--            "\nThe total amount in the wallet\n"
-+            "\nThe total amount in the wallet checked by root/operator\n"
+             "\nThe total amount in the wallet\n"
              + HelpExampleCli("getbalance", "") +
--            "\nThe total amount in the wallet at least 5 blocks confirmed\n"
--            + HelpExampleCli("getbalance", "\"*\" 6") +
-             "\nAs a json rpc call\n"
--            + HelpExampleRpc("getbalance", "\"*\", 6")
-+            + HelpExampleRpc("getbalance", "")
-         );
- 
--    LOCK2(cs_main, pwalletMain->cs_wallet);
--
--    if (params.size() == 0)
--        return  ValueFromAmount(pwalletMain->GetBalance());
--
--    int nMinDepth = 1;
--    if (params.size() > 1)
--        nMinDepth = params[1].get_int();
--    isminefilter filter = ISMINE_SPENDABLE;
--    if(params.size() > 2)
--        if(params[2].get_bool())
--            filter = filter | ISMINE_WATCH_ONLY;
--
--    if (params[0].get_str() == "*") {
--        // Calculate total balance a different way from GetBalance()
--        // (GetBalance() sums up all unspent TxOuts)
--        // getbalance and "getbalance * 1 true" should return the same number
+@@ -754,18 +765,17 @@ UniValue getbalance(const UniValue& params, bool fHelp)
+         // Calculate total balance a different way from GetBalance()
+         // (GetBalance() sums up all unspent TxOuts)
+         // getbalance and "getbalance * 1 true" should return the same number
 -        CAmount nBalance = 0;
--        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
--        {
--            const CWalletTx& wtx = (*it).second;
--            if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
--                continue;
--
++        CAmount nBalance;
+         for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+         {
+             const CWalletTx& wtx = (*it).second;
+             if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
+                 continue;
+ 
 -            CAmount allFee;
--            string strSentAccount;
--            list<COutputEntry> listReceived;
--            list<COutputEntry> listSent;
+             string strSentAccount;
+             list<COutputEntry> listReceived;
+             list<COutputEntry> listSent;
 -            wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount, filter);
--            if (wtx.GetDepthInMainChain() >= nMinDepth)
--            {
--                BOOST_FOREACH(const COutputEntry& r, listReceived)
--                    nBalance += r.amount;
--            }
--            BOOST_FOREACH(const COutputEntry& s, listSent)
--                nBalance -= s.amount;
++            wtx.GetAmounts(listReceived, listSent, strSentAccount, filter);
+             if (wtx.GetDepthInMainChain() >= nMinDepth)
+             {
+                 BOOST_FOREACH(const COutputEntry& r, listReceived)
+@@ -773,7 +783,6 @@ UniValue getbalance(const UniValue& params, bool fHelp)
+             }
+             BOOST_FOREACH(const COutputEntry& s, listSent)
+                 nBalance -= s.amount;
 -            nBalance -= allFee;
--        }
--        return  ValueFromAmount(nBalance);
--    }
--
--    string strAccount = AccountFromValue(params[0]);
-+    // return  ValueFromAmount(pwalletMain->GetBalance());
-+    UniValue result(UniValue::VOBJ);
- 
--    CAmount nBalance = GetAccountBalance(strAccount, nMinDepth, filter);
-+    BOOST_FOREACH(const CValue& cvTarget, pwalletMain->GetBalance())
-+        result.push_back(Pair(boost::lexical_cast<std::string>(cvTarget.first), cvTarget.second));
- 
--    return ValueFromAmount(nBalance);
-+    return result;
- }
- 
- UniValue getunconfirmedbalance(const UniValue &params, bool fHelp)
-@@ -813,15 +780,15 @@ UniValue movecmd(const UniValue& params, bool fHelp)
+         }
+         return  ValueFromAmount(nBalance);
+     }
+@@ -813,15 +822,15 @@ UniValue movecmd(const UniValue& params, bool fHelp)
              "\nArguments:\n"
              "1. \"fromaccount\"   (string, required) The name of the account to move funds from. May be the default account using \"\".\n"
              "2. \"toaccount\"     (string, required) The name of the account to move funds to. May be the default account using \"\".\n"
@@ -10959,7 +11399,7 @@ index ba43b805a..c9a0d6c78 100644
              + HelpExampleCli("move", "\"timotei\" \"akiko\" 0.01 6 \"happy birthday!\"") +
              "\nAs a json rpc call\n"
              + HelpExampleRpc("move", "\"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\"")
-@@ -831,8 +798,9 @@ UniValue movecmd(const UniValue& params, bool fHelp)
+@@ -831,8 +840,9 @@ UniValue movecmd(const UniValue& params, bool fHelp)
  
      string strFrom = AccountFromValue(params[0]);
      string strTo = AccountFromValue(params[1]);
@@ -10971,7 +11411,7 @@ index ba43b805a..c9a0d6c78 100644
          throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
      if (params.size() > 3)
          // unused parameter, used to be nMinDepth, keep type-checking it though
-@@ -851,7 +819,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
+@@ -851,7 +861,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
      CAccountingEntry debit;
      debit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
      debit.strAccount = strFrom;
@@ -10980,7 +11420,7 @@ index ba43b805a..c9a0d6c78 100644
      debit.nTime = nNow;
      debit.strOtherAccount = strTo;
      debit.strComment = strComment;
-@@ -861,7 +829,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
+@@ -861,7 +871,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
      CAccountingEntry credit;
      credit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
      credit.strAccount = strTo;
@@ -10989,7 +11429,7 @@ index ba43b805a..c9a0d6c78 100644
      credit.nTime = nNow;
      credit.strOtherAccount = strFrom;
      credit.strComment = strComment;
-@@ -887,7 +855,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
+@@ -887,7 +897,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
              "\nArguments:\n"
              "1. \"fromaccount\"       (string, required) The name of the account to send funds from. May be the default account using \"\".\n"
              "2. \"tobitcoinaddress\"  (string, required) The bitcoin address to send funds to.\n"
@@ -10998,7 +11438,7 @@ index ba43b805a..c9a0d6c78 100644
              "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
              "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
              "                                     This is not part of the transaction, just kept in your wallet.\n"
-@@ -897,7 +865,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
+@@ -897,7 +907,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
              "\nResult:\n"
              "\"transactionid\"        (string) The transaction id.\n"
              "\nExamples:\n"
@@ -11007,7 +11447,7 @@ index ba43b805a..c9a0d6c78 100644
              + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
              "\nSend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
              + HelpExampleCli("sendfrom", "\"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 6 \"donation\" \"seans outpost\"") +
-@@ -911,8 +879,9 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
+@@ -911,8 +921,9 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
      CBitcoinAddress address(params[1].get_str());
      if (!address.IsValid())
          throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
@@ -11019,7 +11459,7 @@ index ba43b805a..c9a0d6c78 100644
          throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
      int nMinDepth = 1;
      if (params.size() > 3)
-@@ -929,10 +898,10 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
+@@ -929,10 +940,10 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
  
      // Check funds
      CAmount nBalance = GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE);
@@ -11032,7 +11472,7 @@ index ba43b805a..c9a0d6c78 100644
  
      return wtx.GetHash().GetHex();
  }
-@@ -945,38 +914,30 @@ UniValue sendmany(const UniValue& params, bool fHelp)
+@@ -945,38 +956,30 @@ UniValue sendmany(const UniValue& params, bool fHelp)
      
      if (fHelp || params.size() < 2 || params.size() > 5)
          throw runtime_error(
@@ -11077,7 +11517,7 @@ index ba43b805a..c9a0d6c78 100644
          );
  
      LOCK2(cs_main, pwalletMain->cs_wallet);
-@@ -992,14 +953,10 @@ UniValue sendmany(const UniValue& params, bool fHelp)
+@@ -992,14 +995,10 @@ UniValue sendmany(const UniValue& params, bool fHelp)
      if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
          wtx.mapValue["comment"] = params[3].get_str();
  
@@ -11093,7 +11533,7 @@ index ba43b805a..c9a0d6c78 100644
      vector<string> keys = sendTo.getKeys();
      BOOST_FOREACH(const string& name_, keys)
      {
-@@ -1011,36 +968,44 @@ UniValue sendmany(const UniValue& params, bool fHelp)
+@@ -1011,36 +1010,44 @@ UniValue sendmany(const UniValue& params, bool fHelp)
              throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
          setAddress.insert(address);
  
@@ -11154,7 +11594,7 @@ index ba43b805a..c9a0d6c78 100644
      if (!fCreated)
          throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
      if (!pwalletMain->CommitTransaction(wtx, keyChange))
-@@ -1109,7 +1074,6 @@ struct tallyitem
+@@ -1109,7 +1116,6 @@ struct tallyitem
      bool fIsWatchonly;
      tallyitem()
      {
@@ -11162,7 +11602,7 @@ index ba43b805a..c9a0d6c78 100644
          nConf = std::numeric_limits<int>::max();
          fIsWatchonly = false;
      }
-@@ -1175,7 +1139,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
+@@ -1175,7 +1181,7 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
          if (it == mapTally.end() && !fIncludeEmpty)
              continue;
  
@@ -11171,7 +11611,7 @@ index ba43b805a..c9a0d6c78 100644
          int nConf = std::numeric_limits<int>::max();
          bool fIsWatchonly = false;
          if (it != mapTally.end())
-@@ -1255,7 +1219,7 @@ UniValue listreceivedbyaddress(const UniValue& params, bool fHelp)
+@@ -1255,7 +1261,7 @@ UniValue listreceivedbyaddress(const UniValue& params, bool fHelp)
              "    \"involvesWatchonly\" : true,        (bool) Only returned if imported addresses were involved in transaction\n"
              "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
              "    \"account\" : \"accountname\",       (string) DEPRECATED. The account of the receiving address. The default account is \"\".\n"
@@ -11180,7 +11620,7 @@ index ba43b805a..c9a0d6c78 100644
              "    \"confirmations\" : n,               (numeric) The number of confirmations of the most recent transaction included\n"
              "    \"label\" : \"label\"                (string) A comment for the address/transaction, if any\n"
              "  }\n"
-@@ -1319,18 +1283,17 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
+@@ -1319,18 +1325,17 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  
  void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
  {
@@ -11201,7 +11641,7 @@ index ba43b805a..c9a0d6c78 100644
      {
          BOOST_FOREACH(const COutputEntry& s, listSent)
          {
-@@ -1344,7 +1307,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
+@@ -1344,7 +1349,6 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
              if (pwalletMain->mapAddressBook.count(s.destination))
                  entry.push_back(Pair("label", pwalletMain->mapAddressBook[s.destination].name));
              entry.push_back(Pair("vout", s.vout));
@@ -11209,7 +11649,7 @@ index ba43b805a..c9a0d6c78 100644
              if (fLong)
                  WalletTxToJSON(wtx, entry);
              entry.push_back(Pair("abandoned", wtx.isAbandoned()));
-@@ -1434,12 +1396,10 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
+@@ -1434,12 +1438,10 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
              "                                                transaction between accounts, and not associated with an address,\n"
              "                                                transaction id or block. 'send' and 'receive' transactions are \n"
              "                                                associated with an address, transaction id and block details\n"
@@ -11223,7 +11663,7 @@ index ba43b805a..c9a0d6c78 100644
              "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and \n"
              "                                         'receive' category of transactions. Negative confirmations indicate the\n"
              "                                         transation conflicts with the block chain\n"
-@@ -1576,21 +1536,19 @@ UniValue listaccounts(const UniValue& params, bool fHelp)
+@@ -1576,21 +1578,19 @@ UniValue listaccounts(const UniValue& params, bool fHelp)
      map<string, CAmount> mapAccountBalances;
      BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, pwalletMain->mapAddressBook) {
          if (IsMine(*pwalletMain, entry.first) & includeWatchonly) // This address belongs to me
@@ -11247,7 +11687,7 @@ index ba43b805a..c9a0d6c78 100644
          BOOST_FOREACH(const COutputEntry& s, listSent)
              mapAccountBalances[strSentAccount] -= s.amount;
          if (nDepth >= nMinDepth)
-@@ -1633,10 +1591,9 @@ UniValue listsinceblock(const UniValue& params, bool fHelp)
+@@ -1633,10 +1633,9 @@ UniValue listsinceblock(const UniValue& params, bool fHelp)
              "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. Will be \"\" for the default account.\n"
              "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for move transactions (category = move).\n"
              "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
@@ -11259,7 +11699,7 @@ index ba43b805a..c9a0d6c78 100644
              "    \"confirmations\": n,       (numeric) The number of confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
              "    \"blockhash\": \"hashvalue\",     (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
              "    \"blockindex\": n,          (numeric) The block index containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
-@@ -1720,7 +1677,7 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
+@@ -1720,7 +1719,7 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
              "2. \"includeWatchonly\"    (bool, optional, default=false) Whether to include watchonly addresses in balance calculation and details[]\n"
              "\nResult:\n"
              "{\n"
@@ -11268,7 +11708,7 @@ index ba43b805a..c9a0d6c78 100644
              "  \"confirmations\" : n,     (numeric) The number of confirmations\n"
              "  \"blockhash\" : \"hash\",  (string) The block hash\n"
              "  \"blockindex\" : xx,       (numeric) The block index\n"
-@@ -1735,7 +1692,7 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
+@@ -1735,7 +1734,7 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
              "      \"account\" : \"accountname\",  (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
              "      \"address\" : \"bitcoinaddress\",   (string) The bitcoin address involved in the transaction\n"
              "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
@@ -11277,7 +11717,7 @@ index ba43b805a..c9a0d6c78 100644
              "      \"label\" : \"label\",              (string) A comment for the address/transaction, if any\n"
              "      \"vout\" : n,                       (numeric) the vout value\n"
              "    }\n"
-@@ -1768,21 +1725,18 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
+@@ -1768,21 +1767,18 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
      CAmount nCredit = wtx.GetCredit(filter);
      CAmount nDebit = wtx.GetDebit(filter);
      CAmount nNet = nCredit - nDebit;
@@ -11302,7 +11742,7 @@ index ba43b805a..c9a0d6c78 100644
      return entry;
  }
  
-@@ -2226,33 +2180,6 @@ UniValue listlockunspent(const UniValue& params, bool fHelp)
+@@ -2226,33 +2222,6 @@ UniValue listlockunspent(const UniValue& params, bool fHelp)
      return ret;
  }
  
@@ -11336,7 +11776,7 @@ index ba43b805a..c9a0d6c78 100644
  UniValue getwalletinfo(const UniValue& params, bool fHelp)
  {
      if (!EnsureWalletIsAvailable(fHelp))
-@@ -2265,14 +2192,13 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
+@@ -2265,14 +2234,13 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
              "\nResult:\n"
              "{\n"
              "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
@@ -11354,7 +11794,7 @@ index ba43b805a..c9a0d6c78 100644
              "}\n"
              "\nExamples:\n"
              + HelpExampleCli("getwalletinfo", "")
-@@ -2285,13 +2211,11 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
+@@ -2285,13 +2253,11 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
      obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
      obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
      obj.push_back(Pair("unconfirmed_balance", ValueFromAmount(pwalletMain->GetUnconfirmedBalance())));
@@ -11368,73 +11808,61 @@ index ba43b805a..c9a0d6c78 100644
      return obj;
  }
  
-@@ -2325,22 +2249,16 @@ UniValue listunspent(const UniValue& params, bool fHelp)
+@@ -2325,7 +2291,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
      if (!EnsureWalletIsAvailable(fHelp))
          return NullUniValue;
      
 -    if (fHelp || params.size() > 3)
-+    if (fHelp || params.size() > 1)
++    if (fHelp || params.size() > 4)
          throw runtime_error(
--            "listunspent ( minconf maxconf  [\"address\",...] )\n"
-+            "listunspent ( ischecked )\n"
+             "listunspent ( minconf maxconf  [\"address\",...] )\n"
              "\nReturns array of unspent transaction outputs\n"
-             "with between minconf and maxconf (inclusive) confirmations.\n"
--            "Optionally filter to only include txouts paid to specified addresses.\n"
-+            "Optionally filter to only include txouts already checked by operator or root action.\n"
-             "Results are an array of Objects, each of which has:\n"
-             "{txid, vout, scriptPubKey, amount, confirmations}\n"
+@@ -2336,7 +2302,8 @@ UniValue listunspent(const UniValue& params, bool fHelp)
              "\nArguments:\n"
--            "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
--            "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
+             "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
+             "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
 -            "3. \"addresses\"    (string) A json array of bitcoin addresses to filter\n"
--            "    [\n"
--            "      \"address\"   (string) bitcoin address\n"
--            "      ,...\n"
--            "    ]\n"
-+            "1. \"ischecked\"    (bool) whether to return checked utxos only\n"
-             "\nResult\n"
-             "[                   (array of json object)\n"
-             "  {\n"
-@@ -2349,7 +2267,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
++            "3. \"ischecked\"    (bool) whether to return checked utxos only\n"
++            "4. \"addresses\"    (string) A json array of bitcoin addresses to filter\n"
+             "    [\n"
+             "      \"address\"   (string) bitcoin address\n"
+             "      ,...\n"
+@@ -2349,7 +2316,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
              "    \"address\" : \"address\",  (string) the bitcoin address\n"
              "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
              "    \"scriptPubKey\" : \"key\", (string) the script key\n"
 -            "    \"amount\" : x.xxx,         (numeric) the transaction amount in " + CURRENCY_UNIT + "\n"
-+            "    \"amount\" : xxxxx,         (numeric) the transaction amount\n"
++            "    \"amount\" : xxx:xxx,         (numeric) the transaction amount in asset_id:shares\n"
              "    \"confirmations\" : n       (numeric) The number of confirmations\n"
              "  }\n"
              "  ,...\n"
-@@ -2361,49 +2279,22 @@ UniValue listunspent(const UniValue& params, bool fHelp)
+@@ -2361,7 +2328,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
              + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
          );
  
 -    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM)(UniValue::VNUM)(UniValue::VARR));
-+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VBOOL));
++    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM)(UniValue::VNUM)(UniValue::VBOOL)(UniValue::VARR));
  
--    int nMinDepth = 1;
--    if (params.size() > 0)
--        nMinDepth = params[0].get_int();
--
--    int nMaxDepth = 9999999;
--    if (params.size() > 1)
--        nMaxDepth = params[1].get_int();
+     int nMinDepth = 1;
+     if (params.size() > 0)
+@@ -2371,9 +2338,13 @@ UniValue listunspent(const UniValue& params, bool fHelp)
+     if (params.size() > 1)
+         nMaxDepth = params[1].get_int();
+ 
 +    bool fOnlyChecked = true;
- 
--    set<CBitcoinAddress> setAddress;
++    if (params.size() > 2)
++        fOnlyChecked = params[2].get_bool();
++
+     set<CBitcoinAddress> setAddress;
 -    if (params.size() > 2) {
 -        UniValue inputs = params[2].get_array();
--        for (unsigned int idx = 0; idx < inputs.size(); idx++) {
--            const UniValue& input = inputs[idx];
--            CBitcoinAddress address(input.get_str());
--            if (!address.IsValid())
--                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+input.get_str());
--            if (setAddress.count(address))
--                throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
--           setAddress.insert(address);
--        }
--    }
-+    if (params.size() > 0)
-+        fOnlyChecked = params[0].get_bool();
++    if (params.size() > 3) {
++        UniValue inputs = params[3].get_array();
+         for (unsigned int idx = 0; idx < inputs.size(); idx++) {
+             const UniValue& input = inputs[idx];
+             CBitcoinAddress address(input.get_str());
+@@ -2386,11 +2357,13 @@ UniValue listunspent(const UniValue& params, bool fHelp)
+     }
  
      UniValue results(UniValue::VARR);
 -    vector<COutput> vecOutputs;
@@ -11443,29 +11871,31 @@ index ba43b805a..c9a0d6c78 100644
      LOCK2(cs_main, pwalletMain->cs_wallet);
 -    pwalletMain->AvailableCoins(vecOutputs, false, NULL, true);
 -    BOOST_FOREACH(const COutput& out, vecOutputs) {
--        if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
--            continue;
--
--        if (setAddress.size()) {
--            CTxDestination address;
--            if (!ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
--                continue;
--
--            if (!setAddress.count(address))
--                continue;
--        }
 +    pwalletMain->AvailableCoins(vecOutputs, false, NULL, true, fOnlyChecked);
 +    BOOST_FOREACH(const PAIRTYPE(COutput, uint32_t)& out_locktime, vecOutputs) {
 +        COutput out = out_locktime.first;
++
+         if (out.nDepth < nMinDepth || out.nDepth > nMaxDepth)
+             continue;
+ 
+@@ -2403,7 +2376,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
+                 continue;
+         }
  
 -        CAmount nValue = out.tx->vout[out.i].nValue;
 +        CValue nValue = out.tx->vout[out.i].nValue;
          const CScript& pk = out.tx->vout[out.i].scriptPubKey;
          UniValue entry(UniValue::VOBJ);
          entry.push_back(Pair("txid", out.tx->GetHash().GetHex()));
-@@ -2427,6 +2318,9 @@ UniValue listunspent(const UniValue& params, bool fHelp)
-         entry.push_back(Pair("amount",ValueFromAmount(nValue)));
-         entry.push_back(Pair("confirmations",out.nDepth));
+@@ -2424,9 +2397,13 @@ UniValue listunspent(const UniValue& params, bool fHelp)
+                     entry.push_back(Pair("redeemScript", HexStr(redeemScript.begin(), redeemScript.end())));
+             }
+         }
+-        entry.push_back(Pair("amount",ValueFromAmount(nValue)));
+-        entry.push_back(Pair("confirmations",out.nDepth));
++        entry.push_back(Pair("asset_id", (uint64_t)nValue.first));
++        entry.push_back(Pair("shares", nValue.second));
++        entry.push_back(Pair("confirmations", out.nDepth));
          entry.push_back(Pair("spendable", out.fSpendable));
 +        entry.push_back(Pair("checked", out.fChecked));
 +        if (out_locktime.second != 0)
@@ -11473,7 +11903,7 @@ index ba43b805a..c9a0d6c78 100644
          results.push_back(entry);
      }
  
-@@ -2455,7 +2349,6 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
+@@ -2455,7 +2432,6 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                              "\nResult:\n"
                              "{\n"
                              "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
@@ -11481,7 +11911,7 @@ index ba43b805a..c9a0d6c78 100644
                              "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
                              "}\n"
                              "\"hex\"             \n"
-@@ -2485,16 +2378,14 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
+@@ -2485,16 +2461,14 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
          includeWatching = params[1].get_bool();
  
      CMutableTransaction tx(origTx);
@@ -11500,7 +11930,7 @@ index ba43b805a..c9a0d6c78 100644
      return result;
  }
 diff --git a/src/wallet/wallet.cpp b/src/wallet/wallet.cpp
-index 71f309148..cc7e51a6a 100644
+index 71f3091..cc7e51a 100644
 --- a/src/wallet/wallet.cpp
 +++ b/src/wallet/wallet.cpp
 @@ -24,6 +24,7 @@
@@ -13141,7 +13571,7 @@ index 71f309148..cc7e51a6a 100644
 +    return false;
  }
 diff --git a/src/wallet/wallet.h b/src/wallet/wallet.h
-index f7e57e205..3e9721f16 100644
+index f7e57e2..3e9721f 100644
 --- a/src/wallet/wallet.h
 +++ b/src/wallet/wallet.h
 @@ -30,35 +30,14 @@
@@ -13410,7 +13840,7 @@ index f7e57e205..3e9721f16 100644
          strAccount.clear();
          strOtherAccount.clear();
 diff --git a/src/wallet/walletdb.cpp b/src/wallet/walletdb.cpp
-index b1b9d0c23..3aa6ad09c 100644
+index b1b9d0c..3aa6ad0 100644
 --- a/src/wallet/walletdb.cpp
 +++ b/src/wallet/walletdb.cpp
 @@ -201,7 +201,7 @@ CAmount CWalletDB::GetAccountCreditDebit(const string& strAccount)
