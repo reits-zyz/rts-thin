@@ -22,7 +22,7 @@ To play with nrc node:
 5, Start nrc node;
     cd
     mkdir .nrc
-    ./nrcd -rpcuser=user -rpcpassword=123456 -daemon -onlynet=ipv4 -listenonion=0 -rpcport=28333 -datadir=.nrc -addnode=59.110.172.243:9555 -txindex -listen=0
+    ./nrcd -rpcuser=user -rpcpassword=123456 -daemon -onlynet=ipv4 -listenonion=0 -rpcport=28333 -datadir=.nrc -addnode=59.110.171.208:9666 -txindex -listen=0
 
 6, Because nrc is an opposite to a decentralized anonymous crypto currency system, you must have an secret key with an address authorized by the nrc chain operator;
     Example:
